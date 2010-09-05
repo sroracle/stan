@@ -56,5 +56,6 @@ def main(max=35, context=''):
    words = words.strip()
    # Capitalize the first letter.
    # XXX Sentence Logic
-   words = words[0].upper() + words[1:]
+   try: words = words[0].upper() + words[1:]
+   except: return ''
    return words
