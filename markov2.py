@@ -1,14 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 markov2.py - Markov Chains Library v2
 Author: Mixed
    ActiveState, www.activestate.com
    Seth Rees, www.sthrs.me
 """
-import random, sys
+import random, sys, codecs
 
 def main(max=35, context=''):
-   fobj = open("txt.txt")
+   fobj = codecs.open("txt.txt", encoding='utf-8', errors='replace')
    words = ['']
    nonword = "\n"
    w1 = nonword
@@ -35,14 +35,14 @@ def main(max=35, context=''):
       if answers:
          w = random.choice(answers)
       else:
-         w = random.choice(table.keys())
+         w = random.choice(list(table.keys()))
    # Otherwise, just pick something random
    else:
-      w = random.choice(table.keys())
+      w = random.choice(list(table.keys()))
    w1 = w[0]
    w2 = w[1]
    punct = ('.', '!', '?')
-   rage = range(0, max + 1)
+   rage = list(range(0, max + 1))
    for i in rage:
       newword = random.choice(table[(w1, w2)])
       if newword == nonword: break
@@ -58,4 +58,4 @@ def main(max=35, context=''):
    # XXX Sentence Logic
    try: words = words[0].upper() + words[1:]
    except: return ''
-   return words
+   return words.encode('utf-8')
