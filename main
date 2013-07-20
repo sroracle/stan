@@ -1,0 +1,107 @@
+#!/bin/bash
+
+source configuration
+myuser=$(echo "$mynick" | tr '[A-Z]' '[a-z]')
+startup=$(date +%s)
+match() { echo $1 | perl -ne "if (\$_ =~ /^[:@](?:[^[a-zA-Z\[\]_]]+ )?([^\s]+) (([^:\s](?:[^\s])* ?)*)?(?: ?:(.*))?$/){print $2}" | tr -d '\r\n'; }
+getcmd() { echo $1 | perl -ne "if (\$_ =~ /^[$trigger]((?:[a-z][a-z]+)) ?((?:.*))?/){print $2}"; }
+send() { echo "< $1"; printf "$1\r\n" >&3; }
+say() { send "PRIVMSG $1 :$2"; }
+
+# Connect
+exec 3<>/dev/tcp/$server/$port
+send "NICK $mynick"
+send "USER $myuser x x :Bashful IRC Bot"
+
+while :; do
+   read line <&3
+   echo "> $line"
+
+   # PING / PONG
+   if [[ $line =~ "PING" ]]; then
+      send "PONG ${line:5}"
+   # Identify and join channel(s)
+   elif [[ $line =~ "376" ]]; then
+      say 'NickServ' "identify $pass"
+      echo '* Sleep (2)...'
+      sleep 2
+      for chan in ${mychans[@]}; do
+         send "JOIN $chan"
+      done
+   fi
+
+   # Sender's full usermask
+   mask=$(match "$line" '$1')
+   # Ignore useless input
+   if [ -z "$mask" ]; then
+      continue
+   fi
+   # Sender's nick
+   nick=(${mask//!/ })
+   nick=${nick[0]}
+   # Recipient / channel
+   chan=$(match "$line" '$3' | tr -d ' ')
+   # If the channel is me, then set the channel to the sender's nick
+   if [ "$chan" = "$mynick" ]; then
+      chan=$nick
+   fi
+   # Message body
+   msg=$(match "$line" '$4')
+
+   # Check if the message is a command. If not, skip
+   cmd=$(getcmd "$msg" '$1')
+   if [ -z "$cmd" ]; then
+      continue
+   fi
+   # Full command arguments as a string
+   args=$(getcmd "$msg" '$2')
+   # Command arguments as an array
+   arg=(${args// / })
+   
+   # Normal command hook
+   case "$cmd" in
+      up|uptime)
+         now=$(date +%s)
+         delta=$(($(($now-$startup))/60))
+         say "$chan" "About $delta minutes"
+         unset now delta
+         ;;
+      help)
+         say "$chan" 'See https://wiki.interlinked.me/page/Bashful'
+   esac
+
+   # Modular command hook
+   if [ -e "modules/$cmd.py" ]; then
+      say "$chan" "$(python3 modules/$cmd.py $args)"
+   fi
+
+   # Priviledged command hook
+   if [ "$mask" = "$owner" ]; then
+      case "$cmd" in
+         quit)
+            echo '* Exiting...'
+            send 'QUIT :No reason'
+            break
+            ;;
+         join)
+            send "JOIN $args"
+            ;;
+         part)
+            send "PART $args"
+            ;;
+         nick)
+            mynick=${arg[0]}
+            send "NICK ${arg[0]}"
+            ;;
+         say)
+            saying=${arg[@]:1}
+            say "${arg[0]}" "$saying"
+            ;;
+         reload)
+            source configuration
+            say "$chan" 'Reload complete.'
+            ;;
+      esac
+   fi
+   unset mask nick chan cmd args arg
+done

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+server='irc.example.net'
+port=6667
+mynick='Bashful'
+pass='NickServ_password'
+owner='Nick!user@host'
+trigger='!'
+mychans=('#help' '#bots')
