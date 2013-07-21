@@ -30,6 +30,7 @@ while :; do
       done
    fi
 
+   number=$RANDOM
    # Sender's full usermask
    mask=$(match "$line" '$1')
    # Ignore useless input
@@ -38,6 +39,7 @@ while :; do
    fi
    # Sender's nick
    nick=(${mask//!/ })
+   host=${nick[1]}
    nick=${nick[0]}
    # Recipient / channel
    chan=$(match "$line" '$3' | tr -d ' ')
@@ -48,9 +50,21 @@ while :; do
    # Message body
    msg=$(match "$line" '$4')
 
-   # Check if the message is a command. If not, skip
+   # Check if the message is a command.
    cmd=$(getcmd "$msg" '$1')
    if [ -z "$cmd" ]; then
+      if [ -z "$host" ] || (echo ${ignore[@]} | grep -qi $nick); then
+         continue
+      fi
+      let "number %= $randint"
+      if [ $number -eq 67 ] || (echo $msg | grep -qi "$mynick"); then
+         say "$chan" "$(cat stan/brain.db | python2 stan/markov.py $msg)"
+      fi
+      let "number %= $randwrite"
+      if [ $number -eq 7 ]; then
+         echo '* Learning...'
+         (echo "$msg" | stan/split.pl) >> stan/brain.db
+      fi
       continue
    fi
    # Full command arguments as a string
