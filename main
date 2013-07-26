@@ -5,8 +5,7 @@ myuser=$(echo "$mynick" | tr '[A-Z]' '[a-z]')
 startup=$(date +%s)
 match() { echo $1 | perl -ne "if (\$_ =~ /^[:@](?:[^[a-zA-Z\[\]_]]+ )?([^\s]+) (([^:\s](?:[^\s])* ?)*)?(?: ?:(.*))?$/){print $2}" | tr -d '\r\n'; }
 getcmd() { echo $1 | perl -ne "if (\$_ =~ /^[$trigger]((?:[a-z][a-z]+)) ?((?:.*))?/){print $2}"; }
-clean() { echo $1 | sed 's/\o001//g'; }
-send() { out=$(clean "$1"); echo "< $out"; echo -nE "$out\r\n" >&3; }
+send() { echo "< $1"; echo -E "$1" >&3; }
 say() { send "PRIVMSG $1 :$2"; }
 
 # Connect
