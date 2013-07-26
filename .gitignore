@@ -1,3 +1,4 @@
 *.pyc
 modules/*.pyc
 configuration
+stan/brain.db
