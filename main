@@ -116,6 +116,11 @@ while :; do
             source configuration
             say "$chan" 'Reload complete.'
             ;;
+         sed)
+            sed -i.bak "$args" stan/brain.db
+            changes=$(diff -U 0 stan/brain.db.bak stan/brain.db | grep ^@ | wc -l)
+            say "$chan" "$changes line(s) were modified."
+            ;;
       esac
    fi
    unset mask nick chan cmd args arg
