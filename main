@@ -70,6 +70,9 @@ while :; do
       fi
       let "number %= $randwrite"
       if [ $number -eq 7 ]; then
+         if (echo $msg | grep -qi 'http'); then
+            continue
+         fi
          echo '* Learning...'
          (echo "$msg" | contrib/split.pl) >> data/brain.db
       fi
