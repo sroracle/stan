@@ -65,20 +65,20 @@ while :; do
          thisline=$(date +%s)
          # "Shut up" handling
          delta=$(($thisline - $shutupline))
-         if [ $delta -le 300 ]; then
+         if [ $delta -le $sleeptime ]; then
             continue
          fi
 
          # Time / line limit handling
          delta=$(($thisline - $lastline))
          # Both limits have been hit.
-         if [ $delta -le 60 ] && [ $linecount -ge 5 ]; then
+         if [ $delta -le $floodtime ] && [ $linecount -gt $floodlines ]; then
             continue
          # Time limit has been hit but line limit hasn't been hit. Increment line count.
-         elif [ $delta -le 60 ] && [ $linecount -lt 5 ]; then
+         elif [ $delta -le $floodtime ] && [ $linecount -le $floodlines ]; then
             let 'linecount+=1'
          # Time limit has passed. Reset line count.
-         elif [ $delta -gt 60 ]; then
+         elif [ $delta -gt $floodtime ]; then
             linecount=0
          fi
 
@@ -106,7 +106,7 @@ while :; do
          unset now delta
          ;;
       help)
-         say "$chan" 'See https://wiki.interlinked.me/page/Bashful'
+         say "$chan" 'See https://wiki.interlinked.me/page/Stan'
          ;;
       sleep)
          say "$chan" 'Okay.'
@@ -153,6 +153,15 @@ while :; do
             sed -i.bak "$args" stan/brain.db
             changes=$(diff -U 0 stan/brain.db.bak stan/brain.db | grep ^@ | wc -l)
             say "$chan" "$changes line(s) were modified."
+            ;;
+         let)
+            let "$args" &>/tmp/stan-let
+            changes=$(cat /tmp/stan-let)
+            if [ -z "$changes" ]; then
+               changes='Okay.'
+            fi
+            say "$chan" "$changes"
+            rm /tmp/stan-let
             ;;
       esac
    fi
