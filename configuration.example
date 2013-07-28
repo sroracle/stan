@@ -1,4 +1,7 @@
 #!/bin/bash
+source modules/basic
+source modules/admin
+source modules/chat
 
 server='irc.example.net'
 port=6667

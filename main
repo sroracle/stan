@@ -1,11 +1,14 @@
 #!/bin/bash
-
 source configuration
+
+# Runtime values
 myuser=$(echo "$mynick" | tr '[A-Z]' '[a-z]')
 startup=$(date +%s)
 lastline=0
 shutupline=0
 linecount=0
+
+# Functions
 match() { echo -E "$1" | perl -ne "if (\$_ =~ /^[:@](?:[^[a-zA-Z\[\]_]]+ )?([^\s]+) (([^:\s](?:[^\s])* ?)*)?(?: ?:(.*))?$/){print $2}" | tr -d '\r\n'; }
 getcmd() { echo -E "$1" | perl -ne "if (\$_ =~ /^[$trigger]((?:[a-z][a-z]+)) ?((?:.*))?/){print $2}"; }
 clean() { echo -E "$1" | sed 's/\o001//g'; }
@@ -17,6 +20,7 @@ exec 3<>/dev/tcp/$server/$port
 send "NICK $mynick"
 send "USER $myuser x x :Bashful IRC Bot"
 
+# Mainloop
 while :; do
    read line <&3
    echo "> $line"
@@ -62,33 +66,12 @@ while :; do
       fi
       let "number %= $randint"
       if [ $number -eq 67 ] || (echo $msg | grep -qi "\b$mynick\b"); then
-         thisline=$(date +%s)
-         # "Shut up" handling
-         delta=$(($thisline - $shutupline))
-         if [ $delta -le $sleeptime ]; then
-            continue
-         fi
-
-         # Time / line limit handling
-         delta=$(($thisline - $lastline))
-         # Both limits have been hit.
-         if [ $delta -le $floodtime ] && [ $linecount -gt $floodlines ]; then
-            continue
-         # Time limit has been hit but line limit hasn't been hit. Increment line count.
-         elif [ $delta -le $floodtime ] && [ $linecount -le $floodlines ]; then
-            let 'linecount+=1'
-         # Time limit has passed. Reset line count.
-         elif [ $delta -gt $floodtime ]; then
-            linecount=0
-         fi
-
-         say "$chan" "$(cat stan/brain.db | python2 stan/markov.py $msg)"
-         lastline=$(date +%s)
+         chat
       fi
       let "number %= $randwrite"
       if [ $number -eq 7 ]; then
          echo '* Learning...'
-         (echo "$msg" | stan/split.pl) >> stan/brain.db
+         (echo "$msg" | contrib/split.pl) >> data/brain.db
       fi
       continue
    fi
@@ -98,25 +81,7 @@ while :; do
    arg=(${args// / })
    
    # Normal command hook
-   case "$cmd" in
-      up|uptime)
-         now=$(date +%s)
-         delta=$(($(($now-$startup))/60))
-         say "$chan" "About $delta minutes"
-         unset now delta
-         ;;
-      help)
-         say "$chan" 'See https://wiki.interlinked.me/page/Stan'
-         ;;
-      sleep)
-         say "$chan" 'Okay.'
-         shutupline=$(date +%s)
-         ;;
-      wake)
-         say "$chan" 'HELLO'
-         shutupline=0
-         ;;
-   esac
+   basic "$cmd"
 
    # Modular command hook
    if [ -e "modules/$cmd.py" ]; then
@@ -125,45 +90,7 @@ while :; do
 
    # Priviledged command hook
    if [ "$mask" = "$owner" ]; then
-      case "$cmd" in
-         quit)
-            echo '* Exiting...'
-            send 'QUIT :No reason'
-            break
-            ;;
-         join)
-            send "JOIN $args"
-            ;;
-         part)
-            send "PART $args"
-            ;;
-         nick)
-            mynick=${arg[0]}
-            send "NICK ${arg[0]}"
-            ;;
-         say)
-            saying=${arg[@]:1}
-            say "${arg[0]}" "$saying"
-            ;;
-         reload)
-            source configuration
-            say "$chan" 'Reload complete.'
-            ;;
-         sed)
-            sed -i.bak "$args" stan/brain.db
-            changes=$(diff -U 0 stan/brain.db.bak stan/brain.db | grep ^@ | wc -l)
-            say "$chan" "$changes line(s) were modified."
-            ;;
-         let)
-            let "$args" &>/tmp/stan-let
-            changes=$(cat /tmp/stan-let)
-            if [ -z "$changes" ]; then
-               changes='Okay.'
-            fi
-            say "$chan" "$changes"
-            rm /tmp/stan-let
-            ;;
-      esac
+      admin "$cmd"
    fi
    unset mask nick chan cmd args arg
 done

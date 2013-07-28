@@ -2,4 +2,4 @@
 modules/*.pyc
 configuration
 *.bak
-stan/brain.db
+data/brain.db

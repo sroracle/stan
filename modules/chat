@@ -1,0 +1,26 @@
+#!/bin/bash
+
+function chat() {
+   thisline=$(date +%s)
+   # "Shut up" handling
+   delta=$(($thisline - $shutupline))
+   if [ $delta -le $sleeptime ]; then
+      continue
+   fi
+
+   # Time / line limit handling
+   delta=$(($thisline - $lastline))
+   # Both limits have been hit.
+   if [ $delta -le $floodtime ] && [ $linecount -gt $floodlines ]; then
+      continue
+   # Time limit has been hit but line limit hasn't been hit. Increment line count.
+   elif [ $delta -le $floodtime ] && [ $linecount -le $floodlines ]; then
+      let 'linecount+=1'
+   # Time limit has passed. Reset line count.
+   elif [ $delta -gt $floodtime ]; then
+      linecount=0
+   fi
+
+   say "$chan" "$(cat data/brain.db | python2 contrib/markov.py $msg)"
+   lastline=$(date +%s)
+}

@@ -1,0 +1,43 @@
+#!/bin/bash
+
+function admin() {
+   case "$1" in
+      quit)
+         echo '* Exiting...'
+         send 'QUIT :No reason'
+         break
+         ;;
+      join)
+         send "JOIN $args"
+         ;;
+      part)
+         send "PART $args"
+         ;;
+      nick)
+         mynick=${arg[0]}
+         send "NICK ${arg[0]}"
+         ;;
+      say)
+         saying=${arg[@]:1}
+         say "${arg[0]}" "$saying"
+         ;;
+      reload)
+         source configuration
+         say "$chan" 'Reload complete.'
+         ;;
+      sed)
+         sed -i.bak "$args" data/brain.db
+         changes=$(diff -U 0 data/brain.db.bak data/brain.db | grep ^@ | wc -l)
+         say "$chan" "$changes line(s) were modified."
+         ;;
+      let)
+         let "$args" &>/tmp/bashful-let
+         changes=$(cat /tmp/bashful-let)
+         if [ -z "$changes" ]; then
+            changes='Okay.'
+         fi
+         say "$chan" "$changes"
+         rm /tmp/bashful-let
+         ;;
+   esac
+}

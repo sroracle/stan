@@ -1,0 +1,23 @@
+#!/bin/bash
+
+function basic() {
+   case "$1" in
+         up|uptime)
+            now=$(date +%s)
+            delta=$(($(($now-$startup))/60))
+            say "$chan" "About $delta minutes"
+            unset now delta
+            ;;
+         help)
+            say "$chan" 'See https://wiki.interlinked.me/page/Stan'
+            ;;
+         sleep)
+            say "$chan" 'Okay.'
+            shutupline=$(date +%s)
+            ;;
+         wake)
+            say "$chan" 'HELLO'
+            shutupline=0
+            ;;
+   esac
+}
