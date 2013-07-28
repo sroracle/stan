@@ -3,6 +3,9 @@
 source configuration
 myuser=$(echo "$mynick" | tr '[A-Z]' '[a-z]')
 startup=$(date +%s)
+lastline=0
+shutupline=0
+linecount=0
 match() { echo -E "$1" | perl -ne "if (\$_ =~ /^[:@](?:[^[a-zA-Z\[\]_]]+ )?([^\s]+) (([^:\s](?:[^\s])* ?)*)?(?: ?:(.*))?$/){print $2}" | tr -d '\r\n'; }
 getcmd() { echo -E "$1" | perl -ne "if (\$_ =~ /^[$trigger]((?:[a-z][a-z]+)) ?((?:.*))?/){print $2}"; }
 clean() { echo -E "$1" | sed 's/\o001//g'; }
@@ -58,8 +61,29 @@ while :; do
          continue
       fi
       let "number %= $randint"
-      if [ $number -eq 67 ] || (echo $msg | grep -qi "$mynick"); then
+      if [ $number -eq 67 ] || (echo $msg | grep -qi "\b$mynick\b"); then
+         thisline=$(date +%s)
+         # "Shut up" handling
+         delta=$(($thisline - $shutupline))
+         if [ $delta -le 300 ]; then
+            continue
+         fi
+
+         # Time / line limit handling
+         delta=$(($thisline - $lastline))
+         # Both limits have been hit.
+         if [ $delta -le 60 ] && [ $linecount -ge 5 ]; then
+            continue
+         # Time limit has been hit but line limit hasn't been hit. Increment line count.
+         elif [ $delta -le 60 ] && [ $linecount -lt 5 ]; then
+            let 'linecount+=1'
+         # Time limit has passed. Reset line count.
+         elif [ $delta -gt 60 ]; then
+            linecount=0
+         fi
+
          say "$chan" "$(cat stan/brain.db | python2 stan/markov.py $msg)"
+         lastline=$(date +%s)
       fi
       let "number %= $randwrite"
       if [ $number -eq 7 ]; then
@@ -83,6 +107,15 @@ while :; do
          ;;
       help)
          say "$chan" 'See https://wiki.interlinked.me/page/Bashful'
+         ;;
+      sleep)
+         say "$chan" 'Okay.'
+         shutupline=$(date +%s)
+         ;;
+      wake)
+         say "$chan" 'HELLO'
+         shutupline=0
+         ;;
    esac
 
    # Modular command hook
