@@ -21,6 +21,7 @@ function chat() {
       linecount=0
    fi
 
-   say "$chan" "$(cat data/brain.db | python2 contrib/markov.py $msg)"
+   msg=$(echo "$msg" | sed 's/ \?'"$mynick"'[:,!?. ]\+//gi')
+   say "$chan" "$(cat data/brain.db | contrib/markov.py $msg)"
    lastline=$(date +%s)
 }
