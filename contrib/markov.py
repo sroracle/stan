@@ -10,7 +10,7 @@ def e(x):
    total = 0
    for k in h[x]:
       total += h[x][k]
-   r = random.randint( 0, total -1 )
+   r = random.randint(0, total - 1)
    i = 0
    for k in h[x]:
       i += h[x][k]
@@ -25,5 +25,5 @@ if len(sys.argv) > 1: n = random.choice(sys.argv[1:])
 while i < m:
    try: n = e(n)
    except: n = e("the")
-   sys.stdout.write(n + " ")
-   i = i + 1
+   print n,
+   i += 1
