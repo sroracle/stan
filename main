@@ -7,6 +7,7 @@ startup=$(date +%s)
 lastline=0
 shutupline=0
 linecount=0
+police='OFF'
 
 # Functions
 match() { echo -E "$1" | perl -ne "if (\$_ =~ /^[:@](?:[^[a-zA-Z\[\]_]]+ )?([^\s]+) (([^:\s](?:[^\s])* ?)*)?(?: ?:(.*))?$/){print $2}" | tr -d '\r\n'; }

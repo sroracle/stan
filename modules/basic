@@ -19,5 +19,24 @@ function basic() {
             say "$chan" 'HELLO'
             shutupline=0
             ;;
+         police)
+            case "$args" in
+               ON)
+                  police='ON'
+                  say "$chan" 'POLICE:ON'
+                  ;;
+               OFF)
+                  police='OFF'
+                  say "$chan" 'POLICE:OFF'
+                  ;;
+               ON_FULLPOWER)
+                  police='ON_FULLPOWER'
+                  say "$chan" 'POLICE:ON_FULLPOWER'
+                  ;;
+               *)
+                  say "$chan" 'POLICE:'"$police"
+                  ;;
+            esac
+            ;;
    esac
 }
