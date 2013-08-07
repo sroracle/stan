@@ -14,10 +14,10 @@ r_result = re.compile(r'(?i)<A NAME=results>(.*?)</A>')
 r_tag = re.compile(r'<\S+.*?>')
 
 subs = [
-   (' in ', ' -> '),
-   (' to ', ' -> '),
-   (' as ', ' -> '),
-   (' over ', ' / '), 
+#   (' in ', ' -> '),
+#   (' to ', ' -> '),
+#   (' as ', ' -> '),
+#   (' over ', ' / '),
    ('AU', 'au'),
    ('£', 'GBP '), 
    ('€', 'EUR '), 
@@ -29,7 +29,9 @@ subs = [
    ('GB(?!P)', 'gigabytes'),
    ('TB', 'terabytes'),
    ('kbps', '(kilobits / second)'), 
-   ('mbps', '(megabits / second)')
+   ('mbps', '(megabits / second)'),
+   ('fl oz', 'floz'),
+   ('fl_oz', 'floz')
 ]
 
 def calc(input): 

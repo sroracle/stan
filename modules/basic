@@ -19,6 +19,11 @@ function basic() {
             say "$chan" 'HELLO'
             shutupline=0
             ;;
+         dc)
+            args=$(echo -E "$args" | sed 's/[\!?][^<>=]//g')
+            out=$(echo -E "$args" | dc | head -c 400 | sed ':a;N;$!ba;s/\n/<nl>/g')
+            say "$chan" "$out"
+            ;;
          police)
             case "$args" in
                ON)
