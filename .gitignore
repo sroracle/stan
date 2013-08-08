@@ -3,3 +3,4 @@ modules/*.pyc
 configuration
 *.bak
 data/brain.db
+*.swp

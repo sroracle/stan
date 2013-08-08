@@ -43,5 +43,9 @@ function basic() {
                   ;;
             esac
             ;;
+         ping)
+            out=$(ping -qc 4 "$args" 2>&1 | grep -i '\(^PING\)\|packets' | tr '\n' ' ')
+            say "$chan" "$out"
+            ;;
    esac
 }

@@ -32,12 +32,12 @@ function admin() {
          ;;
       let)
          let "$args" &>/tmp/bashful-let
-         changes=$(cat /tmp/bashful-let)
+         changes=$(cat /tmp/stan-let)
          if [ -z "$changes" ]; then
             changes='Okay.'
          fi
          say "$chan" "$changes"
-         rm /tmp/bashful-let
+         rm /tmp/stan-let
          ;;
    esac
 }
