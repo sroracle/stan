@@ -47,5 +47,9 @@ function basic() {
             out=$(ping -qc 4 "$args" 2>&1 | grep -i '\(^PING\)\|packets' | tr '\n' ' ')
             say "$chan" "$out"
             ;;
+         host)
+            out=$(host "$args" | grep -oE "address \S+" | sed 's/address //g' | tr '\n' ' ')
+            say "$chan" "$out"
+            ;;
    esac
 }
