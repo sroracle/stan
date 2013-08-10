@@ -16,6 +16,10 @@ clean() { echo -E "$1" | sed 's/\o001//g'; }
 send() { out=$(clean "$1"); echo -E "< $out"; echo -E "$out" >&3; }
 say() { send "PRIVMSG $1 :$2"; }
 
+# Traps
+trap '{ source configuration; echo "* Got SIGHUP, reloaded configuration."; }' SIGHUP
+trap '{ echo "* Got SIGINT or SIGTERM, quitting..."; send "QUIT :Received SIGINT or SIGTERM"; exit 0; }' SIGINT SIGTERM
+
 # Connect
 exec 3<>/dev/tcp/$server/$port
 send "NICK $mynick"

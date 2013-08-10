@@ -51,5 +51,9 @@ function basic() {
             out=$(host "$args" | grep -oE "address \S+" | sed 's/address //g' | tr '\n' ' ')
             say "$chan" "$out"
             ;;
+         nsa)
+            say "$chan" "Do skype,yahoo other chat and social communication prog work 2 spoil muslims youth and spy 4 isreal&usa???????"
+            say "$chan" "do they record and analyse every word we type????????????"
+            ;;
    esac
 }

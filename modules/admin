@@ -3,34 +3,42 @@
 function admin() {
    case "$1" in
       quit)
-         echo '* Exiting...'
-         send 'QUIT :No reason'
-         break
+         echo '* Got quit command, quiting...'
+         send 'QUIT :Exeunt'
+         sleep 2
+         exit 0
          ;;
       join)
+         echo "* Got join command, joining $args..."
          send "JOIN $args"
          ;;
       part)
+         echo "* Got part command, leaving $args..."
          send "PART $args"
          ;;
       nick)
+         echo "* Got nick command, changing nick to ${arg[0]}..."
          mynick=${arg[0]}
          send "NICK ${arg[0]}"
          ;;
       say)
+         echo '* Got say command, saying arguments...'
          saying=${arg[@]:1}
          say "${arg[0]}" "$saying"
          ;;
       reload)
+         echo '* Got reload command, reloading...'
          source configuration
          say "$chan" 'Reload complete.'
          ;;
       sed)
+         echo "* Got sed command with arguments '$args', editing brain..."
          sed -i.bak "$args" data/brain.db
          changes=$(diff -U 0 data/brain.db.bak data/brain.db | grep ^@ | wc -l)
          say "$chan" "$changes line(s) were modified."
          ;;
       let)
+         echo "* Got let command with arguments '$args', editing environment..."
          let "$args" &>/tmp/bashful-let
          changes=$(cat /tmp/stan-let)
          if [ -z "$changes" ]; then
