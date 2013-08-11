@@ -55,5 +55,9 @@ function basic() {
             say "$chan" "Do skype,yahoo other chat and social communication prog work 2 spoil muslims youth and spy 4 isreal&usa???????"
             say "$chan" "do they record and analyse every word we type????????????"
             ;;
+         ver|version)
+            out=$(git rev-parse HEAD)
+            say "$chan" "Version: commit $out"
+            ;;
    esac
 }
