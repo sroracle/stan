@@ -7,12 +7,13 @@ Licensed under the Eiffel Forum License 2.
 http://inamidst.com/phenny/
 """
 
-import re, urllib.error, pickle, sys
+import re, urllib.error, pickle, sys, codecs
 from urllib.request import Request
 from urllib.request import urlopen
 from urllib.parse import urlencode, quote
+sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
 
-data = pickle.load(open('icao.db', 'rb'))
+data = pickle.load(open('data/icao.db', 'rb'))
 
 findICAO = r'<td><a href="\S+">(\S+)</a></td>'
 NOAA = 'http://weather.noaa.gov/pub/data/observations/metar/stations/%s.TXT'

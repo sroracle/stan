@@ -59,5 +59,11 @@ function basic() {
             out=$(git rev-parse HEAD)
             say "$chan" "Version: commit $out"
             ;;
+         cocain)
+            if [ -z "$args" ]; then
+               args=$nick
+            fi
+            say "$chan" "i fucking hate $args. i bet he cnt evil lift many miligram of cocain with penis"
+            ;;
    esac
 }
