@@ -92,6 +92,9 @@ while :; do
    # Normal command hook
    basic "$cmd"
 
+   # #sporks command hook
+   sporks "$cmd"
+
    # Modular command hook
    if [ -e "modules/$cmd.py" ]; then
       say "$chan" "$(python3 modules/$cmd.py $args)"
