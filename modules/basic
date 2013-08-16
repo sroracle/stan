@@ -60,6 +60,7 @@ function basic() {
             say "$chan" "Version: commit $out"
             ;;
          cocain)
+            args=$(sed -r 's/^\s+|\s+$//g' <<<"$args")
             if [ -z "$args" ]; then
                args=$nick
             fi
