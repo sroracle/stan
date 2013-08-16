@@ -23,7 +23,7 @@ Basic commands
 * `.wake`: Wake up
 * `.ver` or `.version`
 
-#sporks commands
+\#sporks commands
 ----------------
 * `.cocain`
 * `.nsa`
