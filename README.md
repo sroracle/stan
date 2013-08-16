@@ -42,3 +42,8 @@ Traps
 -----
 * `SIGHUP`: reload configuration
 * `SIGINT` or `SIGTERM`: close connection and exit
+
+Acknowledgements
+----------------
+* [contrib/markov.py](contrib/markov.py) and [contrib/split.pl](contrib/split.pl)
+  * ["Fun with Markov Chains"](http://petermblair.com/2013/06/fun-with-markov-chains/). Peter Blair, June 20, 2013.
