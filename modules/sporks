@@ -1,0 +1,38 @@
+#!/bin/bash
+# Copyright 2013, Maxwell Rees, sthrs.me
+# Licensed under the Eiffel Forum License 2.
+
+function sporks() {
+   case "$1" in
+      police)
+         case "$args" in
+            ON)
+               police='ON'
+               say "$chan" 'POLICE:ON'
+               ;;
+            OFF)
+               police='OFF'
+               say "$chan" 'POLICE:OFF'
+               ;;
+            ON_FULLPOWER)
+               police='ON_FULLPOWER'
+               say "$chan" 'POLICE:ON_FULLPOWER'
+               ;;
+            *)
+               say "$chan" 'POLICE:'"$police"
+               ;;
+         esac
+         ;;
+      nsa)
+         say "$chan" "Do skype,yahoo other chat and social communication prog work 2 spoil muslims youth and spy 4 isreal&usa???????"
+         say "$chan" "do they record and analyse every word we type????????????"
+         ;;
+      cocain)
+         args=$(sed -r 's/^\s+|\s+$//g' <<<"$args")
+         if [ -z "$args" ]; then
+            args=$nick
+         fi
+         say "$chan" "i fucking hate $args. i bet he cnt evil lift many miligram of cocain with penis"
+         ;;
+   esac
+}

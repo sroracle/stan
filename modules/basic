@@ -1,70 +1,42 @@
 #!/bin/bash
+# Copyright 2013, Maxwell Rees, sthrs.me
+# Licensed under the Eiffel Forum License 2.
 
 function basic() {
    case "$1" in
-         up|uptime)
-            now=$(date +%s)
-            delta=$(($(($now-$startup))/60))
-            say "$chan" "About $delta minutes"
-            unset now delta
-            ;;
-         help)
-            say "$chan" 'See https://wiki.interlinked.me/page/Stan'
-            ;;
-         sleep)
-            say "$chan" 'Okay.'
-            shutupline=$(date +%s)
-            ;;
-         wake)
-            say "$chan" 'HELLO'
-            shutupline=0
-            ;;
-         dc)
-            args=$(echo -E "$args" | sed 's/[\!?][^<>=]//g')
-            out=$(echo -E "$args" | dc | head -c 400 | sed ':a;N;$!ba;s/\n/<nl>/g')
-            say "$chan" "$out"
-            ;;
-         police)
-            case "$args" in
-               ON)
-                  police='ON'
-                  say "$chan" 'POLICE:ON'
-                  ;;
-               OFF)
-                  police='OFF'
-                  say "$chan" 'POLICE:OFF'
-                  ;;
-               ON_FULLPOWER)
-                  police='ON_FULLPOWER'
-                  say "$chan" 'POLICE:ON_FULLPOWER'
-                  ;;
-               *)
-                  say "$chan" 'POLICE:'"$police"
-                  ;;
-            esac
-            ;;
-         ping)
-            out=$(ping -qc 4 "$args" 2>&1 | grep -i '\(^PING\)\|packets' | tr '\n' ' ')
-            say "$chan" "$out"
-            ;;
-         host)
-            out=$(host "$args" | grep -oE "address \S+" | sed 's/address //g' | tr '\n' ' ')
-            say "$chan" "$out"
-            ;;
-         nsa)
-            say "$chan" "Do skype,yahoo other chat and social communication prog work 2 spoil muslims youth and spy 4 isreal&usa???????"
-            say "$chan" "do they record and analyse every word we type????????????"
-            ;;
-         ver|version)
-            out=$(git rev-parse HEAD)
-            say "$chan" "Version: commit $out"
-            ;;
-         cocain)
-            args=$(sed -r 's/^\s+|\s+$//g' <<<"$args")
-            if [ -z "$args" ]; then
-               args=$nick
-            fi
-            say "$chan" "i fucking hate $args. i bet he cnt evil lift many miligram of cocain with penis"
-            ;;
+      up|uptime)
+         now=$(date +%s)
+         delta=$(($(($now-$startup))/60))
+         say "$chan" "About $delta minutes"
+         unset now delta
+         ;;
+      help)
+         say "$chan" 'See https://wiki.interlinked.me/page/Stan'
+         ;;
+      sleep)
+         say "$chan" 'Okay.'
+         shutupline=$(date +%s)
+         ;;
+      wake)
+         say "$chan" 'HELLO'
+         shutupline=0
+         ;;
+      dc)
+         args=$(echo -E "$args" | sed 's/[\!?][^<>=]//g')
+         out=$(echo -E "$args" | dc | head -c 400 | sed ':a;N;$!ba;s/\n/<nl>/g')
+         say "$chan" "$out"
+         ;;
+      ping)
+         out=$(ping -qc 4 "$args" 2>&1 | grep -i '\(^PING\)\|packets' | tr '\n' ' ')
+         say "$chan" "$out"
+         ;;
+      host)
+         out=$(host "$args" | grep -oE "address \S+" | sed 's/address //g' | tr '\n' ' ')
+         say "$chan" "$out"
+         ;;
+      ver|version)
+         out=$(git rev-parse HEAD)
+         say "$chan" "Version: commit $out"
+         ;;
    esac
 }

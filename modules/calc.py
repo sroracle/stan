@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-# coding=utf-8
+# Copyright 2013, Sean B. Palmer, inamidst.com
+# rewritten by Maxwell Rees, sthrs.me
+# Licensed under the Eiffel Forum License 2.
 import re, urllib.request, sys, codecs
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
 
 # Constants
 help = 'See http://futureboy.us/frinkdocs/'
-uri = 'http://futureboy.homeip.net/fsp/frink.fsp?fromVal='
+uri = 'http://futureboy.homeip.net/fsp/frink.fsp?hideHelp=1&fromVal='
 r_result = re.compile(r'(?i)<A NAME=results>(.*?)</A>')
 r_tag = re.compile(r'<\S+.*?>')
 subs = [

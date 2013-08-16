@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
-"""
-weather.py - Phenny Weather Module
-Copyright 2008, Sean B. Palmer, inamidst.com
-Licensed under the Eiffel Forum License 2.
-
-http://inamidst.com/phenny/
-"""
-
+# Copyright 2008, Sean B. Palmer, inamidst.com
+# Licensed under the Eiffel Forum License 2.
 import re, urllib.error, pickle, sys, codecs
 from urllib.request import Request
 from urllib.request import urlopen
