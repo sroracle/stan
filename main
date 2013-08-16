@@ -4,7 +4,7 @@
 source data/configuration
 
 # Runtime values
-myuser=$(echo "$mynick" | tr '[A-Z]' '[a-z]')
+myuser=$(tr '[A-Z]' '[a-z]' <<<"$mynick")
 startup=$(date +%s)
 lastline=0
 shutupline=0
@@ -15,12 +15,13 @@ police='OFF'
 match() { perl -ne "if (\$_ =~ /^[:@](?:[^[a-zA-Z\[\]_]]+ )?([^\s]+) (([^:\s](?:[^\s])* ?)*)?(?: ?:(.*))?$/){print $2}" <<<"$1" | tr -d '\r\n'; }
 getcmd() { perl -ne "if (\$_ =~ /^[$trigger]((?:[a-z][a-z]+)) ?((?:.*))?/){print $2}" <<<"$1"; }
 clean() { sed 's/\o001//g' <<<"$1"; }
-send() { out=$(clean "$1"); echo -E "< $out"; echo -E "$out" >&3; }
+send() { out=$(clean "$1"); echo -E "$out" >&3; }
 say() { send "PRIVMSG $1 :$2"; }
+log() { echo "$(date +'[%H:%M:%S]') $1"; }
 
 # Traps
-trap '{ source data/configuration; echo "* Got SIGHUP, reloaded configuration."; }' SIGHUP
-trap '{ echo "* Got SIGINT or SIGTERM, quitting..."; send "QUIT :Received SIGINT or SIGTERM"; exit 0; }' SIGINT SIGTERM
+trap '{ source data/configuration; log "* Got SIGHUP, reloaded configuration."; }' SIGHUP
+trap '{ log "* Got SIGINT or SIGTERM, quitting..."; send "QUIT :Received SIGINT or SIGTERM"; exit 0; }' SIGINT SIGTERM
 
 # Connect
 exec 3<>/dev/tcp/$server/$port
@@ -30,7 +31,6 @@ send "USER $myuser x x :Bashful IRC Bot"
 # Mainloop
 while :; do
    read line <&3
-   echo "> $line"
 
    # PING / PONG
    if [[ $line =~ "PING" ]]; then
@@ -38,7 +38,6 @@ while :; do
    # Identify and join channel(s)
    elif [[ $line =~ "376" ]]; then
       say 'NickServ' "identify $pass"
-      echo '* Sleep (2)...'
       sleep 2
       for chan in ${mychans[@]}; do
          send "JOIN $chan"
@@ -80,7 +79,7 @@ while :; do
          if (grep -qi 'http' <<<"$msg"); then
             continue
          fi
-         echo '* Learning...'
+         log '* Learning...'
          (contrib/split.pl <<<"$msg") >> data/brain.db
       fi
       continue

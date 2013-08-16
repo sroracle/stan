@@ -5,49 +5,56 @@
 function admin() {
    case "$1" in
       quit)
-         echo '* Got quit command, quiting...'
-         send 'QUIT :Exeunt'
+         if [ -z "$args" ]; then
+            args='Exeunt'
+         fi
+         log '* QUIT'
+         send "QUIT :$args"
          sleep 2
          exit 0
          ;;
       join)
-         echo "* Got join command, joining $args..."
+         log "* JOIN $args"
          send "JOIN $args"
          ;;
       part)
-         echo "* Got part command, leaving $args..."
+         log "* PART $args"
          send "PART $args"
          ;;
       nick)
-         echo "* Got nick command, changing nick to ${arg[0]}..."
+         log "* NICK ${arg[0]}"
          mynick=${arg[0]}
          send "NICK ${arg[0]}"
          ;;
       say)
-         echo '* Got say command, saying arguments...'
+         log "* SAY $args"
          saying=${arg[@]:1}
          say "${arg[0]}" "$saying"
          ;;
       reload)
-         echo '* Got reload command, reloading...'
-         source configuration
-         say "$chan" 'Reload complete.'
+         log '* RELOAD'
+         changes=$( (source data/configuration) 2>&1)
+         if [ -z "$changes" ]; then
+            changes='Reload complete.'
+         fi
+         say "$chan" "$changes"
          ;;
       sed)
-         echo "* Got sed command with arguments '$args', editing brain..."
-         sed -i.bak "$args" data/brain.db
-         changes=$(diff -U 0 data/brain.db.bak data/brain.db | grep ^@ | wc -l)
+         log "* SED '$args'"
+         changes=$( (sed -i.bak "$args" data/brain.db) 2>&1)
+         if [ -z "$changes" ]; then
+            changes=$(diff -U 0 data/brain.db.bak data/brain.db | grep ^@ | wc -l)
+         fi
          say "$chan" "$changes line(s) were modified."
          ;;
       let)
-         echo "* Got let command with arguments '$args', editing environment..."
-         let "$args" &>/tmp/bashful-let
-         changes=$(cat /tmp/stan-let)
+         log "* LET '$args'"
+         changes=$( (let "$args") 2>&1)
          if [ -z "$changes" ]; then
+            let "$args"
             changes='Okay.'
          fi
          say "$chan" "$changes"
-         rm /tmp/stan-let
          ;;
    esac
 }
