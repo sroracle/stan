@@ -12,8 +12,10 @@ linecount=0
 police='OFF'
 
 # Functions
-match() { perl -ne "if (\$_ =~ /^[:@](?:[^[a-zA-Z\[\]_]]+ )?([^\s]+) (([^:\s](?:[^\s])* ?)*)?(?: ?:(.*))?$/){print $2}" <<<"$1" | tr -d '\r\n'; }
+match() { perl -ne "if (\$_ =~ /^:([\w\[\]{}\`\\]+)!([\w\[\]{}\`\\]+)@([a-zA-Z\[\]_\/]+) ([\w]+) ([#\w\[\]{}\`\\\\]+) :(.*)$/){print $2}" <<<"$1" | tr -d '\r\n'; }
 getcmd() { perl -ne "if (\$_ =~ /^[$trigger]((?:[a-z][a-z]+)) ?((?:.*))?/){print $2}" <<<"$1"; }
+uri() { perl -ne "if (\$_ =~ /.*(https?:\/\/[^<> \"\x01]+)[,.]?/) { print \$1 }" <<<"$1"; }
+
 clean() { sed 's/\o001//g' <<<"$1"; }
 send() { out=$(clean "$1"); echo -E "$out" >&3; }
 say() { send "PRIVMSG $1 :$2"; }
@@ -44,32 +46,41 @@ while :; do
       done
    fi
 
-   number=$RANDOM
-   # Sender's full usermask
-   mask=$(match "$line" '$1')
-   # Ignore useless input
-   if [ -z "$mask" ]; then
+   # Discard non-PRIVMSGs
+   class=$(match "$line" '$2')
+   if [ "$class" != 'PRIVMSG' ]; then
       continue
    fi
-   # Sender's nick
+
+   # Message components:
+   # * Sender identity
+   mask=$(match "$line" '$1')
    nick=(${mask//!/ })
    host=${nick[1]}
    nick=${nick[0]}
-   # Recipient / channel
+   # * Recipient / channel
    chan=$(match "$line" '$3' | tr -d ' ')
    # If the channel is me, then set the channel to the sender's nick
    if [ "$chan" = "$mynick" ]; then
       chan=$nick
    fi
-   # Message body
+   # * Message body
    msg=$(match "$line" '$4')
+
+   # URL check
+   thisuri=$(uri "$msg")
+   if [ -n "$thisuri" ]; then
+      say "$chan" "$(python modules/title.py "$thisuri")"
+      continue
+   fi
 
    # Check if the message is a command.
    cmd=$(getcmd "$msg" '$1')
    if [ -z "$cmd" ]; then
-      if [ -z "$host" ] || (grep -qi $nick <<<"${ignore[@]}"); then
+      if (grep -qi $nick <<<"${ignore[@]}"); then
          continue
       fi
+      number=$RANDOM
       let "number %= $randint"
       if [ $number -eq 67 ] || (grep -qi "\b$mynick\b" <<<"$msg"); then
          chat
