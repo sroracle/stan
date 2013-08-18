@@ -71,7 +71,7 @@ while :; do
 
    # URL check
    thisuri=$(uri "$msg")
-   if [ -n "$thisuri" ]; then
+   if [ -n "$thisuri" ] && (grep -qiv $nick <<<"${ignore[@]}"); then
       say "$chan" "$(python3 modules/title.py "$thisuri")"
       continue
    fi

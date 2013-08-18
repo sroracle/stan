@@ -2,9 +2,8 @@
 # Copyright 2008, Sean B. Palmer, inamidst.com
 # rewritten by Maxwell Rees, sthrs.me 
 # Licensed under the Eiffel Forum License 2.
-import re, urllib, urllib.request, urllib.error, urllib.parse, http.client, urllib.parse, time
-from html.entities import name2codepoint
-import sys
+import re, urllib.request, urllib.parse, urllib.parse, sys, codecs, html.parser
+sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
 
 r_uri = r'.*(https?://[^<> "\x01]+)[,.]?'
 r_title = re.compile(r'(?ims)<title[^>]*>(.*?)</title\s*>')
@@ -49,18 +48,8 @@ if m:
       title = title.replace('  ', ' ')
    if len(title) > 200: 
       title = title[:200] + '[...]'
-   def e(m): 
-      entity = m.group(0)
-      if entity.startswith('&#x'): 
-         cp = int(entity[3:-1], 16)
-         return chr(cp)
-      elif entity.startswith('&#'): 
-         cp = int(entity[2:-1])
-         return chr(cp)
-      else: 
-         char = name2codepoint[entity[1:-1]]
-         return chr(char)
-   title = r_entity.sub(e, title)
+   h = html.parser.HTMLParser()
+   title = h.unescape(title)
    if not title: 
       # No title
       sys.exit(5)
