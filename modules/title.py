@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright 2008, Sean B. Palmer, inamidst.com
 # rewritten by Maxwell Rees, sthrs.me 
 # Licensed under the Eiffel Forum License 2.
