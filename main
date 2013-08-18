@@ -4,7 +4,6 @@
 source data/configuration
 
 # Runtime values
-myuser=$(tr '[A-Z]' '[a-z]' <<<"$mynick")
 startup=$(date +%s)
 lastline=0
 shutupline=0
@@ -15,7 +14,6 @@ police='OFF'
 match() { perl -ne "if (\$_ =~ /:([\w\[\]{}\`\\\\]+)\!([~\w]+)@([\S]+) (\w+) ([#a-zA-Z\[\]{}\`\\\\]+) :(.*)/){print $2}" <<<"$1" | tr -d '\r\n'; }
 getcmd() { perl -ne "if (\$_ =~ /^[$trigger]((?:[a-z][a-z]+)) ?((?:.*))?/){print $2}" <<<"$1"; }
 uri() { perl -ne "if (\$_ =~ /.*(https?:\/\/[^<> \"\x01]+)[,.]?/) { print \$1 }" <<<"$1"; }
-
 clean() { sed 's/\o001//g' <<<"$1"; }
 send() { out=$(clean "$1"); echo -E "$out" >&3; }
 say() { send "PRIVMSG $1 :$2"; }
@@ -26,19 +24,18 @@ trap '{ source data/configuration; log "* Got SIGHUP, reloaded configuration."; 
 trap '{ log "* Got SIGINT or SIGTERM, quitting..."; send "QUIT :Received SIGINT or SIGTERM"; exit 0; }' SIGINT SIGTERM
 
 # Connect
+log "* Connecting to $server:$port..."
 exec 3<>/dev/tcp/$server/$port
 send "NICK $mynick"
 send "USER $myuser x x :Bashful IRC Bot"
 
 # Mainloop
-while :; do
-   read line <&3
-
-   # PING / PONG
+while read line <&3; do
+   # Housekeeping
    if [[ $line =~ "PING" ]]; then
       send "PONG ${line:5}"
-   # Identify and join channel(s)
    elif [[ $line =~ "376" ]]; then
+      log '* Connected!'
       say 'NickServ' "identify $pass"
       sleep 2
       for chan in ${mychans[@]}; do
@@ -52,34 +49,27 @@ while :; do
       continue
    fi
 
-   # Message components:
-   # * Sender identity
+   # Message components
    nick=$(match "$line" '$1')
+   if (grep -qi $nick <<<"${ignore[@]}"); then
+         continue
+   fi
    user=$(match "$line" '$2')
    host=$(match "$line" '$3')
    mask="$nick!$user@$host"
-   # * Recipient / channel
    chan=$(match "$line" '$5' | tr -d ' ')
-   # If the channel is me, then set the channel to the sender's nick
    if [ "$chan" = "$mynick" ]; then
       chan=$nick
    fi
-   # * Message body
    msg=$(match "$line" '$6')
-
-   log "[$chan] <$nick> $msg"
-
-   # URL check
-   thisuri=$(uri "$msg")
-   if [ -n "$thisuri" ] && (grep -qiv $nick <<<"${ignore[@]}"); then
-      say "$chan" "$(python3 modules/title.py "$thisuri")"
-      continue
-   fi
-
-   # Check if the message is a command.
+   log "($chan) <$nick> $msg"
    cmd=$(getcmd "$msg" '$1')
+
+   # Non-command hooks
    if [ -z "$cmd" ]; then
-      if (grep -qi $nick <<<"${ignore[@]}"); then
+      thisuri=$(uri "$msg")
+      if [ -n "$thisuri" ]; then
+         say "$chan" "$(python3 modules/title.py "$thisuri")"
          continue
       fi
       number=$RANDOM
@@ -97,25 +87,19 @@ while :; do
       fi
       continue
    fi
-   # Full command arguments as a string
+
+   # Command components
    args=$(getcmd "$msg" '$2')
-   # Command arguments as an array
    arg=(${args// / })
-   
-   # Normal command hook
+   # Command hooks
    basic "$cmd"
-
-   # #sporks command hook
    sporks "$cmd"
-
-   # Modular command hook
    if [ -e "modules/$cmd.py" ]; then
       say "$chan" "$(python3 modules/$cmd.py $args)"
    fi
-
-   # Priviledged command hook
    if [ "$mask" = "$owner" ]; then
       admin "$cmd"
    fi
-   unset mask nick chan cmd args arg
+   unset msg mask nick user host chan cmd args arg number thisuri
 done
+log '* Exiting...'

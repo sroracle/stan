@@ -1,11 +1,13 @@
 #!/bin/bash
 source modules/basic
+source modules/sporks
 source modules/admin
 source modules/chat
 
 server='irc.example.net'
 port=6667
 mynick='Bashful'
+myuser='bashful'
 pass='NickServ_password'
 owner='Nick!user@host'
 trigger='!'
