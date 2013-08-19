@@ -19,8 +19,10 @@ Basic commands
 * `.weather`: Retrieve weather information for the area provided.
 * `.help`: Link to this page
 * `.up` or `.uptime`: Display uptime in minutes
+* `.seen`: Show last time that a given nick spoke
 * `.sleep`: Sleep for 5 minutes
 * `.wake`: Wake up
+* `.wik`: Wikipedia lookup
 * `.ver` or `.version`
 
 \#sporks commands
