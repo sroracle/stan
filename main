@@ -65,10 +65,11 @@ while read line <&3; do
    log "($chan) <$nick> $msg"
    cmd=$(getcmd "$msg" '$1')
 
+   now=$(date +%s)
+   echo "$nick $now" >> data/seen.db
+
    # Non-command hooks
    if [ -z "$cmd" ]; then
-      now=$(date +%s)
-      echo "$nick $now" >> data/seen.db
       thisuri=$(uri "$msg")
       if [ -n "$thisuri" ]; then
          say "$chan" "$(python3 modules/title.py "$thisuri")"
