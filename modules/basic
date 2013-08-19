@@ -38,5 +38,9 @@ function basic() {
          out=$(git rev-parse HEAD)
          say "$chan" "Version: commit $out"
          ;;
+      wik)
+         out=$(dig @resolver1.opendns.com +short txt "$args".wp.dg.cx)
+         say "$chan" "$out"
+         ;;
    esac
 }

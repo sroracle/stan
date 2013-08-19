@@ -35,6 +35,7 @@ function admin() {
          log '* RELOAD'
          changes=$( (source data/configuration) 2>&1)
          if [ -z "$changes" ]; then
+            source data/configuration
             changes='Reload complete.'
          fi
          say "$chan" "$changes"
