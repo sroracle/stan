@@ -42,5 +42,9 @@ function basic() {
          out=$(dig @resolver1.opendns.com +short txt "$args".wp.dg.cx)
          say "$chan" "$out"
          ;;
+      od)
+         out=$(od -ct u1 <<<"$args" | sed -e  's/^[ \t]*//' -e 's/  / /g' | awk 'NR % 2 == 0' | tr '\n' ' ')
+         say "$chan" "$out"
+         ;;
    esac
 }

@@ -5,6 +5,9 @@ from datetime import timedelta
 if len(sys.argv) < 2:
    sys.exit(1)
 nick = sys.argv[1]
+if nick == "Stan":
+   print("DO YOU KNOW WHAT AM I?")
+   sys.exit(1)
 db = {}
 
 with open('data/seen.db', 'r') as f:
