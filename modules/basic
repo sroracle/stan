@@ -13,7 +13,7 @@ function basic() {
       help)
          say "$chan" 'See https://wiki.interlinked.me/page/Stan'
          ;;
-      sleep)
+      shutup|sleep)
          say "$chan" 'Okay.'
          shutupline=$(date +%s)
          ;;
@@ -34,11 +34,11 @@ function basic() {
          out=$(host "$args" | grep -oE "address \S+" | sed 's/address //g' | tr '\n' ' ')
          say "$chan" "$out"
          ;;
-      ver|version)
+      v|version)
          out=$(git rev-parse HEAD)
          say "$chan" "Version: commit $out"
          ;;
-      wik)
+      w|wik)
          out=$(dig @resolver1.opendns.com +short txt "$args".wp.dg.cx)
          say "$chan" "$out"
          ;;

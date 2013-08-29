@@ -12,7 +12,7 @@ police='OFF'
 
 # Functions
 match() { perl -ne "if (\$_ =~ /:([\w\[\]{}\`\\\\]+)\!([~\w]+)@([\S]+) (\w+) ([#a-zA-Z\[\]{}\`\\\\]+) :(.*)/){print $2}" <<<"$1" | tr -d '\r\n'; }
-getcmd() { perl -ne "if (\$_ =~ /^(?:[$trigger]|(?:$mynick: ))((?:[a-z][a-z]+)) ?((?:.*))?/){print $2}" <<<"$1"; }
+getcmd() { perl -ne "if (\$_ =~ /^(?:[$trigger]|(?:$mynick: do ))((?:[a-z]+)) ?((?:.*))?/){print $2}" <<<"$1"; }
 uri() { perl -ne "if (\$_ =~ /.*(https?:\/\/[^<> \"\x01]+)[,.]?/) { print \$1 }" <<<"$1"; }
 clean() { sed 's/\o001//g' <<<"$1"; }
 send() { out=$(clean "$1"); echo -E "$out" >&3; }
