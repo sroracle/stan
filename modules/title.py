@@ -11,9 +11,12 @@ r_title = re.compile(r'(?ims)<title[^>]*>(.*?)</title\s*>')
 r_entity = re.compile(r'&[A-Za-z0-9#]+;')
 uri = sys.argv[1]
 
-if 'youtube.com' in uri:
+if 'youtube.com' in uri or 'youtu.be' in uri:
    vid = urllib.parse.urlparse(uri)
-   vid = urllib.parse.parse_qs(vid.query)['v'][0]
+   if 'youtube.com' in uri:
+      vid = urllib.parse.parse_qs(vid.query)['v'][0]
+   if 'youtu.be' in uri:
+      vid = vid.path[1:]
    request = 'https://www.googleapis.com/youtube/v3/videos?key={0}&part=snippet,statistics&fields=items(snippet,statistics)&id={1}'.format(key, vid)
    result = json.loads(urllib.request.urlopen(request).read().decode())
    result = result['items'][0]
