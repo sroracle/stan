@@ -2,13 +2,28 @@
 # Copyright 2008, Sean B. Palmer, inamidst.com
 # rewritten by Maxwell Rees, sthrs.me 
 # Licensed under the Eiffel Forum License 2.
-import re, urllib.request, urllib.parse, urllib.parse, sys, codecs, html.parser
+import re, urllib.request, urllib.parse, sys, codecs, html.parser, json
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
 
+key = 'AIzaSyA-4_hHDK2_r2VPRB2bSqinvMKP4pX6ZcQ'
 r_uri = r'.*(https?://[^<> "\x01]+)[,.]?'
 r_title = re.compile(r'(?ims)<title[^>]*>(.*?)</title\s*>')
 r_entity = re.compile(r'&[A-Za-z0-9#]+;')
 uri = sys.argv[1]
+
+if 'youtube.com' in uri:
+   vid = urllib.parse.urlparse(uri)
+   vid = urllib.parse.parse_qs(vid.query)['v'][0]
+   request = 'https://www.googleapis.com/youtube/v3/videos?key={0}&part=snippet,statistics&fields=items(snippet,statistics)&id={1}'.format(key, vid)
+   result = json.loads(urllib.request.urlopen(request).read().decode())
+   result = result['items'][0]
+   title = result['snippet']['title']
+   views = int(result['statistics']['viewCount'])
+   likes = int(result['statistics']['likeCount'])
+   dislikes = int(result['statistics']['dislikeCount'])
+   rating = (likes - dislikes) / (likes + dislikes)
+   print('\02Title\02: {0}, \02Views\02: {1:,}, \02Rating\02: {2:.2%}'.format(title, views, rating))
+   sys.exit(0)
 
 try: 
    redirects = 0
