@@ -39,10 +39,6 @@ if 'youtube.com' in uri or 'youtu.be' in uri:
       print(' [{0}]'.format(shorturl))
    else:
       print('')
-=======
-   rating = (likes) / (likes + dislikes)
-   print('\02Title\02: {0}, \02Views\02: {1:,}, \02Rating\02: {2:.1%}'.format(title, views, rating))
->>>>>>> d19f45020b8ea3772b47200ebd60da2be8de02c6
    sys.exit(0)
 
 try: 
