@@ -5,11 +5,20 @@
 import re, urllib.request, urllib.parse, sys, codecs, html.parser, json
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
 
-key = 'AIzaSyA-4_hHDK2_r2VPRB2bSqinvMKP4pX6ZcQ'
+google_key = 'AIzaSyA-4_hHDK2_r2VPRB2bSqinvMKP4pX6ZcQ'
+bitly_key = 'a30b71ad6af5596c2829a5d53ab4a2f496fd9fc1'
 r_uri = r'.*(https?://[^<> "\x01]+)[,.]?'
 r_title = re.compile(r'(?ims)<title[^>]*>(.*?)</title\s*>')
 r_entity = re.compile(r'&[A-Za-z0-9#]+;')
 uri = sys.argv[1]
+shorturl = ''
+
+if len(uri) > 79:
+   request = 'https://api-ssl.bitly.com/v3/shorten?access_token={0}&longUrl={1}'.format(bitly_key, uri)
+   try:
+      result = json.loads(urllib.request.urlopen(request).read().decode())
+      shorturl = result['data']['url']
+   except: pass
 
 if 'youtube.com' in uri or 'youtu.be' in uri:
    vid = urllib.parse.urlparse(uri)
@@ -25,7 +34,11 @@ if 'youtube.com' in uri or 'youtu.be' in uri:
    likes = int(result['statistics']['likeCount'])
    dislikes = int(result['statistics']['dislikeCount'])
    rating = (likes - dislikes) / (likes + dislikes)
-   print('\02Title\02: {0}, \02Views\02: {1:,}, \02Rating\02: {2:.2%}'.format(title, views, rating))
+   print('\02Title\02: {0}, \02Views\02: {1:,}, \02Rating\02: {2:.2%}'.format(title, views, rating), end='')
+   if shorturl:
+      print(' [{0}]'.format(shorturl))
+   else:
+      print('')
    sys.exit(0)
 
 try: 
@@ -73,4 +86,8 @@ if m:
       sys.exit(5)
    title = title.replace('\n', '')
    title = title.replace('\r', '')
-   print('\02Title:\02', title)
+   print('\02Title:\02', title, end='')
+   if shorturl:
+      print(' [{0}]'.format(shorturl))
+   else:
+      print('')
