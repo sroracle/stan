@@ -33,7 +33,10 @@ if 'youtube.com' in uri or 'youtu.be' in uri:
    views = int(result['statistics']['viewCount'])
    likes = int(result['statistics']['likeCount'])
    dislikes = int(result['statistics']['dislikeCount'])
-   rating = (likes) / (likes + dislikes)
+   if likes >= dislikes:
+      rating = (likes) / (likes + dislikes)
+   else:
+      rating = (dislikes) / (likes + dislikes) * -1
    print('\02Title\02: {0}, \02Views\02: {1:,}, \02Rating\02: {2:.2%}'.format(title, views, rating), end='')
    if shorturl:
       print(' [{0}]'.format(shorturl))
