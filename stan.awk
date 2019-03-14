@@ -1,0 +1,517 @@
+# SPDX-License-Identifier: EFL-2.0
+# Copyright (c) 2019 Max Rees
+# See LICENSE for more information.
+
+function load_config() {
+	FS = "="
+
+	while ((getline < ENVIRON["STAN_CFG"]) == 1) {
+		if ($1 == "BRAIN_FILE")
+			BRAIN_FILE = $2
+		else if ($1 == "OWNERMASK")
+			OWNERMASK = $2
+		else if ($1 == "NICK")
+			NICK = $2
+		else if ($1 == "USERNAME")
+			USERNAME = $2
+		else if ($1 == "NS_PASSWORD")
+			NS_PASSWORD = $2
+		else if ($1 == "GECOS")
+			GECOS = $2
+		else if ($1 == "ADDRESS_PATTERN")
+			ADDRESS_PATTERN = $2
+		else if ($1 == "CMD_PATTERN")
+			CMD_PATTERN = $2
+		else if ($1 == "CHANNELS")
+			CHANNELS[$2] = 0
+		else if ($1 == "IGNORE")
+			IGNORE[$2] = 1
+		else if ($1 == "VERBOSE")
+			VERBOSE = $2
+		else if (index($1, "#") != 1)
+			notice("Unknown configuration option: '" $1 "'")
+	}
+
+	close(ENVIRON["STAN_CFG"])
+	FS = " "
+}
+
+# Return a random integer in the closed interval [lower, upper]
+# since rand() returns a floating point number in the half-open
+# interval [0, 1)
+function randrange(lower, upper) {
+	return int((upper - lower + 1) * rand()) + lower
+}
+
+function slice(array, lower, upper,        i) {
+		s = ""
+		for (i = lower; i <= upper; i++)
+			s = s " " array[i]
+		return s
+}
+
+function record(msg) {
+	print msg > "/dev/stderr"
+	fflush("/dev/stderr")
+}
+
+function debug(msg) {
+	if (VERBOSE != "")
+		record(msg)
+}
+
+# Only print once. Useful for ensuring some output from server is seen when
+# !VERBOSE, but not printed when VERBOSE
+function record_once(msg) {
+	if (VERBOSE == "")
+		record(msg)
+}
+
+function notice(msg) {
+	record("*** " msg)
+}
+
+function send(msg) {
+	debug(">>> " msg)
+	print msg
+	fflush()
+}
+
+function say(channel, msg) {
+	record_once(sprintf(">>> (%s) <%s> %s", channel, NICK, msg))
+	send("PRIVMSG " channel " :" msg)
+}
+
+function irccmd(cmd, args) {
+	record_once("*** " cmd " " args)
+	send(cmd " " args)
+}
+
+function set_nick(nick) {
+	NICK = nick
+	irccmd("NICK", nick)
+	CHAT_PATTERN = "[^]^a-z0-9{}_`|\\\\])"
+	CHAT_PATTERN = "(^|" CHAT_PATTERN tolower(nick) "($|" CHAT_PATTERN
+}
+
+function identify() {
+	if (NS_PASSWORD != "")
+		send("PRIVMSG NickServ :identify " NICK " " NS_PASSWORD)
+}
+
+function age(        delta, days, hours, mins, secs) {
+	delta = systime() - BIRTH
+	days = int(delta / (3600 * 24))
+	if (days > 0) {
+		if (days == 1)
+			days = days " day, "
+		else
+			days = days " days, "
+		hours = int((delta % (3600 * 24)) / 3600)
+	} else {
+		days = ""
+		hours = int(delta / 3600)
+	}
+	mins = int((delta % 3600) / 60)
+	secs = delta % 60
+	return sprintf("%s%02d:%02d:%02d", days, hours, mins, secs)
+}
+
+function randnick(channel,        i, j) {
+	j = randrange(1, CHANNELS[channel])
+	i = 0
+	for (bangpath in NAMES) {
+		i++
+		split(bangpath, path, SUBSEP)
+		if (i == j)
+			return path[2]
+	}
+}
+
+function new_neuron(dendrite, axon) {
+	if (!((dendrite, axon) in NEURONS)) {
+		NEURON_COUNT++
+		NEURONS[dendrite, axon] = 0
+	}
+
+	NEURONS[dendrite, axon] += 1
+}
+
+function load_neurons() {
+	NEURON_COUNT = 0
+	while ((getline < BRAIN_FILE) == 1) {
+		if (NF == 2)
+			new_neuron($1, $2)
+		else if (NF == 3)
+			new_neuron($1, $2 " " $3)
+		else
+			continue
+	}
+	close(BRAIN_FILE)
+	notice(NEURON_COUNT " neurons loaded")
+}
+
+function nextword(seed,        total, i, j, neuron, words, newseed) {
+	total = 0
+	i = 0
+	j = randrange(1, NEURON_COUNT)
+	for (neuron in NEURONS) {
+		i++
+		split(neuron, words, SUBSEP)
+		if (words[1] != seed) {
+			if (i == j)
+				newseed = words[1]
+			continue
+		}
+		total += NEURONS[seed, words[2]]
+	}
+	if (total == 0)
+		return newseed
+
+	i = 0
+	j = randrange(0, total - 1)
+	for (neuron in NEURONS) {
+		split(neuron, words, SUBSEP)
+		if (words[1] != seed)
+			continue
+		i += NEURONS[seed, words[2]]
+		if (j < i)
+			return words[2]
+	}
+	return words[2]
+}
+
+function markov(msg,        out_len, len, words, seed, i) {
+	out_len = randrange(1, 10)
+	if (out_len == 1)
+		out_len = randrange(1, 10)
+	else if (out_len == 10)
+		out_len = randrange(21, 26)
+	else
+		out_len = randrange(10, 21)
+
+	len = split(msg, words, " ")
+	if (len > 0)
+		seed = words[randrange(1, len)]
+
+	sentence = ""
+	for (i = 0; i < out_len; i++) {
+		seed = nextword(seed)
+
+		if (index(seed, "\036") == length(seed)) {
+			sentence = sentence substr(seed, 1, length(seed) - 1)
+			break
+		}
+
+		else
+			sentence = sentence seed " "
+
+		len = split(seed, words, " ")
+		seed = words[len]
+	}
+
+	return sentence
+}
+
+function learn(msg,        words, i, len) {
+	len = split(msg, words, " ")
+	if (len < 2)
+		return
+
+	notice("Learning...")
+	if (len < 3) {
+		printf "%s %s\036\n", words[1], words[2] >> BRAIN_FILE
+		fflush(BRAIN_FILE)
+		close(BRAIN_FILE)
+		new_neuron(words[1], words[2] "\036")
+		return
+	}
+
+	for (i = 1; i <= len - 2; i++) {
+		if (i + 1 > len - 2)
+			end = "\036"
+		else
+			end = ""
+		printf "%s %s %s%s\n", words[i], words[i + 1], words[i + 2], end >> BRAIN_FILE
+		new_neuron(words[i], words[i + 1] " " words[i + 2] end)
+	}
+	fflush(BRAIN_FILE)
+	close(BRAIN_FILE)
+}
+
+function chat(channel, nick, msg) {
+	if (tolower(msg) ~ CHAT_PATTERN || randrange(0, 300) == 67) {
+		sub(ADDRESS_PATTERN, "", msg)
+		say(channel, markov(msg))
+	}
+
+	if (!index(msg, "http") && randrange(0, 10) == 7)
+		learn(msg)
+}
+
+function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
+	if (cmd[1] == "reload") {
+		delete NEURONS
+		load_neurons()
+		say(channel, "OK - " NEURON_COUNT " neurons loaded")
+	}
+
+	else if (cmd[1] == "sync") {
+		irccmd("WHOIS", NICK)
+	}
+
+	else if (cmd[1] == "identify")
+		identify()
+
+	else if (cmd[1] == "restart") {
+		say(channel, "Killing child #" CHILD)
+		notice("****** STOPPING CHILD #" CHILD " ******")
+		exit 69
+	}
+
+	else if (cmd[1] == "quit")
+		irccmd("QUIT", ":See ya later")
+
+	else if (cmdlen == 2) {
+		if (cmd[1] == "join") {
+			CHANNELS[cmd[2]] = 0
+			irccmd("JOIN", cmd[2])
+		}
+
+		else if (cmd[1] == "part") {
+			delete CHANNELS[cmd[2]]
+			irccmd("PART", cmd[2] " :See ya later")
+		}
+
+		else if (cmd[1] == "nick")
+			set_nick(cmd[2])
+	}
+
+	else if (cmd[1] == "say" && cmdlen > 2)
+		send("PRIVMSG " cmd[2] " :" slice(cmd, 3, cmdlen))
+}
+
+function user(channel, nick, cmd, cmdlen) {
+	if (cmd[1] == "status") {
+		msg = "Child #" CHILD ": " age() " old with " NEURON_COUNT " neurons"
+		say(channel, msg)
+	}
+
+	else if (cmd[1] == "police") {
+		if (cmd[2] == "ON")
+			POLICE="ON"
+		else if (cmd[2] == "OFF")
+			POLICE="OFF"
+		else if (cmd[2] == "ON_FULLPOWER")
+			POLICE="ON_FULLPOWER"
+
+		if (POLICE == "")
+			POLICE="OFF"
+
+		say(channel, "POLICE:" POLICE)
+	}
+
+	else if (cmd[1] == "nsa") {
+		say(channel, "Do skype,yahoo other chat and social communication prog work 2 spoil muslims youth and spy 4 isreal&usa???????")
+		say(channel, "do they record and analyse every word we type????????????")
+	}
+
+	else if (cmd[1] == "cocain") {
+		if (cmd[2])
+			target = cmd[2]
+		else
+			target = randnick(channel)
+
+		say(channel, "i fucking hate " target ". i bet he cnt evil lift many miligram of cocain with penis")
+	}
+}
+
+BEGIN {
+	load_config()
+	srand()
+	RS = "\n"
+	FS = " "
+
+	if (CHILD == "") {
+		if (ENVIRON["STAN_ARGV"] == "") {
+			notice("The $STAN_ARGV environment variable must be defined")
+			exit 1
+		}
+
+		argv = ENVIRON["STAN_ARGV"] " -v CHILD="
+		child_number = 1
+		child_status = system(argv child_number)
+		while (child_status == 69) {
+			child_number++
+			child_status = system(argv child_number)
+		}
+		exit child_status
+	}
+
+	notice("****** STARTING CHILD #" CHILD " ******")
+	load_neurons()
+	BIRTH = systime()
+
+	set_nick(NICK)
+
+	if (CHILD == "1")
+		irccmd("USER", USERNAME " 8 * :" GECOS)
+
+	else {
+		delete CHANNELS
+		delete NAMES
+		irccmd("WHOIS", NICK)
+	}
+}
+
+{
+	debug("<<< " $0)
+	# Normally we'd just add \r to RS, but mawk ignores RS with -W interactive
+	# so let's strip it out manually instead
+	sub(/\r$/, "")
+}
+
+/^PING :/ {
+	send("PONG " $2)
+}
+
+# Welcome message - usually safe to join now
+$2 ~ /^001$/ {
+	notice("Connected!")
+	identify()
+	for (channel in CHANNELS)
+		irccmd("JOIN", channel)
+}
+
+# Display errors from the server (4xx, 5xx, and sometimes 9xx numerics)
+$2 ~ /^[459][0-9][0-9]/ {
+	record_once("<<< " $0)
+}
+
+# WHOIS
+#    $1   $2   $3   $4     $5      $6      $7
+# :server 319 NICK nick :#chan1 +#chan2 @#chan3
+$2 ~ /^319$/ {
+	if ($4 == NICK) {
+		for (i = 5; i <= NF; i++) {
+			channel = $(i)
+			sub(/[:+@]+/, "", channel)
+			CHANNELS[channel] = 0
+			irccmd("NAMES", channel)
+		}
+	}
+}
+
+# NAMES
+#    $1   $2   $3    $4     $5      $6     $7     $8
+# :server 353 NICK [@*=] #channel :nick1 +nick2 @nick3
+$2 ~ /^353$/ {
+	channel = $5
+
+	# Clear old NAMES first
+	CHANNELS[channel] = 0
+	for (bangpath in NAMES) {
+		split(bangpath, path, SUBSEP)
+		if (path[1] == channel)
+			delete NAMES[bangpath]
+	}
+
+	s = ""
+	for (i = 6; i <= NF; i++) {
+		nick = $(i)
+		sub(/[:+@]+/, "", nick)
+		s = s " " nick
+		if (!((channel, nick) in NAMES)) {
+			CHANNELS[channel] += 1
+			NAMES[channel, nick] = 1
+		}
+	}
+
+	record_once("NAMES " channel " (" CHANNELS[channel] "):" s)
+}
+
+# JOIN
+#       $1         $2     $3
+# :nick!user@host JOIN #channel
+# PART
+#       $1         $2     $3
+# :nick!user@host PART #channel :msg
+# KICK
+#       $1         $2     $3     $4
+# :nick!user@host KICK #channel nick :msg
+# QUIT
+#       $1         $2
+# :nick!user@host QUIT :msg
+$2 ~ /^(JOIN|PART|QUIT)$/ {
+	bang = index($1, "!")
+	if (!bang)
+		next
+	nick = substr($1, 2, bang - 2)
+	if (nick == NICK)
+		next
+	channel = $3
+
+	if ($2 == "JOIN") {
+		CHANNELS[channel] += 1
+		NAMES[channel, nick] = 1
+	}
+
+	else if ($2 == "PART") {
+		CHANNELS[channel] -= 1
+		delete NAMES[channel, nick]
+	}
+
+	else if ($2 == "KICK") {
+		nick = $4
+		CHANNELS[channel] -= 1
+		delete NAMES[channel, nick]
+	}
+
+	else {
+		for (bangpath in NAMES) {
+			split(bangpath, path, SUBSEP)
+			if (path[2] == nick) {
+				CHANNELS[channel] -= 1
+				delete NAMES[bangpath]
+			}
+		}
+	}
+}
+
+#       $1          $2       $3     $4
+# :nick!user@host PRIVMSG #channel :msg
+$2 ~ /^(PRIVMSG|NOTICE)$/ {
+	bang = index($1, "!")
+	if (!bang)
+		next
+	nick = substr($1, 2, bang - 2)
+	hostmask = substr($1, bang + 1)
+	channel = $3
+	msgstart = length($1 " " $2 " " $3 " :") + 1
+	msg = substr($0, msgstart)
+
+	if (channel == NICK) {
+		channel = nick
+		fmt = "(" nick ")"
+	} else
+		fmt = "(" channel ") <" nick ">"
+
+	if (nick in IGNORE || nick == NICK) {
+		record_once(sprintf("~~~ %s %s", fmt, msg))
+		next
+	} else
+		record_once(sprintf("<<< %s %s", fmt, msg))
+
+	if (msg ~ CMD_PATTERN) {
+		sub(CMD_PATTERN, "", msg)
+		cmdlen = split(msg, cmd, " ")
+
+		if (hostmask == OWNERMASK)
+			admin(channel, nick, cmd, cmdlen)
+
+		user(channel, nick, cmd, cmdlen)
+	}
+
+	else
+		chat(channel, nick, msg)
+}

@@ -1,0 +1,5 @@
+*.cfg
+*.db
+*.bak
+*.swp
+stan.sh
