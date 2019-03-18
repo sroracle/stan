@@ -80,6 +80,9 @@ function send(msg) {
 }
 
 function say(channel, msg) {
+	if (length(msg) > 450)
+		msg = substr(msg, 1, 450) " [...]"
+
 	record_once(sprintf(">>> (%s) <%s> %s", channel, NICK, msg))
 	send("PRIVMSG " channel " :" msg)
 }
