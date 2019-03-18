@@ -31,3 +31,5 @@ IGNORE=OperServ
 IGNORE=RServ
 IGNORE=SaslServ
 IGNORE=StatServ
+# Patterns to ignore (useful for other bots' commands; one per line)
+IGNOREPAT=^[!]

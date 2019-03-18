@@ -26,6 +26,8 @@ function load_config() {
 			CHANNELS[$2] = 0
 		else if ($1 == "IGNORE")
 			IGNORE[$2] = 1
+		else if ($1 == "IGNOREPAT")
+			IGNOREPAT[$2] = 1
 		else if ($1 == "VERBOSE")
 			VERBOSE = $2
 		else if (index($1, "#") != 1)
@@ -495,6 +497,13 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 		fmt = "(" nick ")"
 	} else
 		fmt = "(" channel ") <" nick ">"
+
+	for (pattern in IGNOREPAT) {
+		if (msg ~ pattern) {
+			record_once(sprintf("~~~ %s %s", fmt, msg))
+			next
+		}
+	}
 
 	if (nick in IGNORE || nick == NICK) {
 		record_once(sprintf("~~~ %s %s", fmt, msg))
