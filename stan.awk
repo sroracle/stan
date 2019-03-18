@@ -298,7 +298,7 @@ function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
 
 function user(channel, nick, cmd, cmdlen) {
 	if (cmd[1] == "status") {
-		msg = "Child #" CHILD ": " age() " old with " NEURON_COUNT " neurons"
+		msg = "Child #" CHILD ": " age() " old with " NEURON_COUNT " neurons, " NR " messages read"
 		say(channel, msg)
 	}
 
