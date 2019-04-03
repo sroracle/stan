@@ -134,56 +134,47 @@ function randnick(channel,        i, j) {
 }
 
 function new_neuron(dendrite, axon) {
-	if (!((dendrite, axon) in NEURONS)) {
-		NEURON_COUNT++
-		NEURONS[dendrite, axon] = 0
+	if (!(dendrite in NEURONS)) {
+		DENDRITE_COUNT++
+		NEURONS[dendrite] = axon
 	}
-
-	NEURONS[dendrite, axon] += 1
+	else
+		NEURONS[dendrite] = NEURONS[dendrite] "\035" axon
 }
 
-function load_neurons() {
-	NEURON_COUNT = 0
+function load_neurons(        rest) {
+	DENDRITE_COUNT = 0
 	while ((getline < BRAIN_FILE) == 1) {
-		if (NF == 2)
-			new_neuron($1, $2)
-		else if (NF == 3)
-			new_neuron($1, $2 " " $3)
+		rest = substr($0, length($1) + 2)
+		if (!($1 in NEURONS)) {
+			DENDRITE_COUNT++
+			NEURONS[$1] = rest
+		}
 		else
-			continue
+			NEURONS[$1] = NEURONS[$1] "\035" rest
 	}
 	close(BRAIN_FILE)
-	notice(NEURON_COUNT " neurons loaded")
+	notice(DENDRITE_COUNT " dendrites loaded")
 }
 
-function nextword(seed,        total, i, j, neuron, words, newseed) {
-	total = 0
-	i = 0
-	j = randrange(1, NEURON_COUNT)
-	for (neuron in NEURONS) {
-		i++
-		split(neuron, words, SUBSEP)
-		if (words[1] != seed) {
+function nextword(seed,        str, total, i, j, axons, dendrite) {
+	if (!(seed in NEURONS)) {
+		i = 0
+		j = randrange(1, DENDRITE_COUNT)
+		for (dendrite in NEURONS) {
+			i++
 			if (i == j)
-				newseed = words[1]
-			continue
+				return nextword(dendrite)
 		}
-		total += NEURONS[seed, words[2]]
 	}
-	if (total == 0)
-		return newseed
 
-	i = 0
-	j = randrange(0, total - 1)
-	for (neuron in NEURONS) {
-		split(neuron, words, SUBSEP)
-		if (words[1] != seed)
-			continue
-		i += NEURONS[seed, words[2]]
-		if (j < i)
-			return words[2]
+	total = split(NEURONS[seed], axons, "\035")
+	j = randrange(1, total)
+	for (i in axons) {
+		if (i == j)
+			return axons[i]
 	}
-	return words[2]
+	return axons[i]
 }
 
 function markov(msg,        out_len, len, words, seed, i) {
@@ -225,9 +216,9 @@ function learn(msg,        words, i, len) {
 
 	notice("Learning...")
 	if (len < 3) {
-		printf "%s %s\036\n", words[1], words[2] >> BRAIN_FILE
-		fflush(BRAIN_FILE)
-		close(BRAIN_FILE)
+		printf "%s %s\036\n", words[1], words[2] >> (BRAIN_FILE ".new")
+		fflush(BRAIN_FILE ".new")
+		close(BRAIN_FILE ".new")
 		new_neuron(words[1], words[2] "\036")
 		return
 	}
@@ -237,11 +228,11 @@ function learn(msg,        words, i, len) {
 			end = "\036"
 		else
 			end = ""
-		printf "%s %s %s%s\n", words[i], words[i + 1], words[i + 2], end >> BRAIN_FILE
+		printf "%s %s %s%s\n", words[i], words[i + 1], words[i + 2], end >> (BRAIN_FILE ".new")
 		new_neuron(words[i], words[i + 1] " " words[i + 2] end)
 	}
-	fflush(BRAIN_FILE)
-	close(BRAIN_FILE)
+	fflush(BRAIN_FILE ".new")
+	close(BRAIN_FILE ".new")
 }
 
 function chat(channel, nick, msg) {
@@ -258,7 +249,7 @@ function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
 	if (cmd[1] == "reload") {
 		delete NEURONS
 		load_neurons()
-		say(channel, "OK - " NEURON_COUNT " neurons loaded")
+		say(channel, "OK - " DENDRITE_COUNT " dendrites loaded")
 	}
 
 	else if (cmd[1] == "sync") {
@@ -298,7 +289,7 @@ function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
 
 function user(channel, nick, cmd, cmdlen) {
 	if (cmd[1] == "status") {
-		msg = "Child #" CHILD ": " age() " old with " NEURON_COUNT " neurons, " NR " messages read"
+		msg = "Child #" CHILD ": " age() " old with " DENDRITE_COUNT " dendrites, " NR " messages read"
 		say(channel, msg)
 	}
 
@@ -327,7 +318,7 @@ function user(channel, nick, cmd, cmdlen) {
 		else
 			target = randnick(channel)
 
-		say(channel, "i fucking hate " target ". i bet he cnt evil lift many miligram of cocain with penis")
+		say(channel, "i fucking hate " target ". i bet they cnt evil lift many miligram of cocain with penis")
 	}
 }
 
