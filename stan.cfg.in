@@ -9,9 +9,6 @@ USERNAME=stan
 NS_PASSWORD=
 # Also known as the real name field
 GECOS=Stanley Kudzu
-# This should be an ERE for tabcompletion of the NICK to be stripped out
-# from incoming messages (e.g. when people say "Stan: " or "Stan, ")
-ADDRESS_PATTERN=^[sS][tT][aA][nN][:,] 
 # ERE for commands - usually should start with ^ to match beginning-of-line
 CMD_PATTERN=^[%]
 # Which channels to join (one per line)

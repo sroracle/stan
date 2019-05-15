@@ -18,8 +18,6 @@ function load_config() {
 			NS_PASSWORD = $2
 		else if ($1 == "GECOS")
 			GECOS = $2
-		else if ($1 == "ADDRESS_PATTERN")
-			ADDRESS_PATTERN = $2
 		else if ($1 == "CMD_PATTERN")
 			CMD_PATTERN = $2
 		else if ($1 == "CHANNELS")
@@ -92,11 +90,37 @@ function irccmd(cmd, args) {
 	send(cmd " " args)
 }
 
+function case_expand(c) {
+	if (c == "[" || c == "{")
+		return "[[{]"
+	else if (c == "]" || c == "}")
+		return "[]}]"
+	else if (c == "|" || c == "\\")
+		return "[|\\\\]"
+	else if (c == "^")
+		return "\\^"
+	else if (c == "`" || c == "-")
+		return c
+	else
+		return "[" tolower(c) toupper(c) "]"
+}
+
 function set_nick(nick) {
 	NICK = nick
 	irccmd("NICK", nick)
+
+	nick_pattern = ""
+	for (i = 1; i <= length(NICK); i++) {
+		c = substr(NICK, i, 1)
+		c = case_expand(c)
+		nick_pattern = nick_pattern c
+	}
+
+	record("Nick pattern is: " nick_pattern)
+
+	ADDRESS_PATTERN = "^" nick_pattern "[:, ]+ ?"
 	CHAT_PATTERN = "[^]^a-z0-9{}_`|\\\\])"
-	CHAT_PATTERN = "(^|" CHAT_PATTERN tolower(nick) "($|" CHAT_PATTERN
+	CHAT_PATTERN = "(^|" CHAT_PATTERN nick_pattern "($|" CHAT_PATTERN
 }
 
 function identify() {
