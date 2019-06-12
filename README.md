@@ -12,6 +12,7 @@ User commands
 * `%nsa`
 * `%police`
 * `%status`
+* `%uptime`
 
 Administrative commands
 -----------------------
