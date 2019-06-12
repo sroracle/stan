@@ -36,6 +36,8 @@ function choose(        i, words, adding_len, last_len) {
 function reset() {
 	num_other = randrange(1, dendrites)
 	num_choices = 0
+	delete choices
+	other_choice = ""
 }
 
 BEGIN {
@@ -78,7 +80,7 @@ $1 == seed {
 }
 
 $1 > seed {
-	if (num_choices != 0 || (num_choices == 0 && FNR > num_other)) {
+	if (num_choices > 0 || (num_choices == 0 && FNR > num_other)) {
 		ARGC++
 		ARGV[ARGC - 1] = FILENAME
 		nextfile
