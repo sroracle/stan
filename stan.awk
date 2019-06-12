@@ -281,6 +281,10 @@ function user(channel, nick, cmd, cmdlen) {
 		say(channel, msg)
 	}
 
+	else if (cmd[1] == "uptime") {
+		say(channel, get_output("uptime"))
+	}
+
 	else if (cmd[1] == "police") {
 		if (cmd[2] == "ON")
 			POLICE="ON"
