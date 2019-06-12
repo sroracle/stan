@@ -26,7 +26,7 @@ case "$(readlink "$(command -v awk)")" in
 	;;
 esac
 
-export STAN_ARGV="busybox awk $interactive -f $STAN_AWK"
+export STAN_ARGV="awk $interactive -f $STAN_AWK"
 if [ "$1" = "-n" ]; then
 	exec socat EXEC:"$STAN_ARGV" STDIO
 else
