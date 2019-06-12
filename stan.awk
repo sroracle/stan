@@ -1,6 +1,11 @@
-# SPDX-License-Identifier: EFL-2.0
+# SPDX-License-Identifier: EFL-2.0 AND GPL-3.0
 # Copyright (c) 2019 Max Rees
 # See LICENSE for more information.
+#
+# The shell_quote function was adapted from:
+# https://www.gnu.org/software/gawk/manual/html_node/Shell-Quoting.html
+# Copyright (c) 2014 Michael Brennan
+# See LICENSE.GPL3 for more information.
 
 function load_config() {
 	FS = "="
@@ -48,6 +53,28 @@ function slice(array, lower, upper,        i) {
 		for (i = lower; i <= upper; i++)
 			s = s " " array[i]
 		return s
+}
+
+function shell_quote(str,        SINGLE, QSINGLE, len, exploded, i)
+{
+    if (str == "")
+        return "\047\047"
+
+    SINGLE = "\047"
+    QSINGLE = "\"\047\""
+    len = split(str, exploded, SINGLE)
+
+    str = SINGLE exploded[1] SINGLE
+    for (i = 2; i <= len; i++)
+        str = str QSINGLE SINGLE exploded[i] SINGLE
+
+    return str
+}
+
+function get_output(argv,        output) {
+	(argv) | getline output
+	close(argv)
+	return output
 }
 
 function record(msg) {
@@ -157,80 +184,20 @@ function randnick(channel,        i, j) {
 	}
 }
 
-function new_neuron(dendrite, axon) {
-	if (!(dendrite in NEURONS)) {
-		DENDRITE_COUNT++
-		NEURONS[dendrite] = axon
-	}
-	else
-		NEURONS[dendrite] = NEURONS[dendrite] "\035" axon
+function load_neurons(        argv) {
+	DENDRITE_COUNT = get_output("wc -l < " shell_quote(BRAIN_FILE))
 }
 
-function load_neurons(        rest) {
-	DENDRITE_COUNT = 0
-	while ((getline < BRAIN_FILE) == 1) {
-		rest = substr($0, length($1) + 2)
-		if (!($1 in NEURONS)) {
-			DENDRITE_COUNT++
-			NEURONS[$1] = rest
-		}
-		else
-			NEURONS[$1] = NEURONS[$1] "\035" rest
-	}
-	close(BRAIN_FILE)
-	notice(DENDRITE_COUNT " dendrites loaded")
-}
-
-function nextword(seed,        str, total, i, j, axons, dendrite) {
-	if (!(seed in NEURONS)) {
-		i = 0
-		j = randrange(1, DENDRITE_COUNT)
-		for (dendrite in NEURONS) {
-			i++
-			if (i == j)
-				return nextword(dendrite)
-		}
-	}
-
-	total = split(NEURONS[seed], axons, "\035")
-	j = randrange(1, total)
-	for (i in axons) {
-		if (i == j)
-			return axons[i]
-	}
-	return axons[i]
-}
-
-function markov(msg,        out_len, len, words, seed, i) {
-	out_len = randrange(1, 10)
-	if (out_len == 1)
-		out_len = randrange(1, 10)
-	else if (out_len == 10)
-		out_len = randrange(21, 26)
-	else
-		out_len = randrange(10, 21)
-
+function markov(msg,        len, seed, argv, sentence) {
 	len = split(msg, words, " ")
 	if (len > 0)
 		seed = words[randrange(1, len)]
 
-	sentence = ""
-	for (i = 0; i < out_len; i++) {
-		seed = nextword(seed)
+	argv = "awk -f markov.awk -v dendrites=" shell_quote(DENDRITE_COUNT)
+	argv = argv " -v seed=" shell_quote(seed)
+	argv = argv " " shell_quote(BRAIN_FILE)
 
-		if (index(seed, "\036") == length(seed)) {
-			sentence = sentence substr(seed, 1, length(seed) - 1)
-			break
-		}
-
-		else
-			sentence = sentence seed " "
-
-		len = split(seed, words, " ")
-		seed = words[len]
-	}
-
-	return sentence
+	return get_output(argv)
 }
 
 function learn(msg,        words, i, len) {
@@ -243,7 +210,6 @@ function learn(msg,        words, i, len) {
 		printf "%s %s\036\n", words[1], words[2] >> (BRAIN_FILE ".new")
 		fflush(BRAIN_FILE ".new")
 		close(BRAIN_FILE ".new")
-		new_neuron(words[1], words[2] "\036")
 		return
 	}
 
@@ -253,7 +219,6 @@ function learn(msg,        words, i, len) {
 		else
 			end = ""
 		printf "%s %s %s%s\n", words[i], words[i + 1], words[i + 2], end >> (BRAIN_FILE ".new")
-		new_neuron(words[i], words[i + 1] " " words[i + 2] end)
 	}
 	fflush(BRAIN_FILE ".new")
 	close(BRAIN_FILE ".new")
@@ -271,7 +236,6 @@ function chat(channel, nick, msg) {
 
 function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
 	if (cmd[1] == "reload") {
-		delete NEURONS
 		load_neurons()
 		say(channel, "OK - " DENDRITE_COUNT " dendrites loaded")
 	}
