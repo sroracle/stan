@@ -7,7 +7,7 @@
 function new_entry() {
 	KEY = $1
 	printf "\n%s ", KEY
-	LENGTH = length(key) + 2
+	LENGTH = length(KEY) + 2
 }
 
 BEGIN {
