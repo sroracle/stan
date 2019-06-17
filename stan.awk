@@ -184,20 +184,10 @@ function randnick(channel,        i, j) {
 	}
 }
 
-function load_neurons(        argv) {
-	DENDRITE_COUNT = get_output("wc -l < " shell_quote(BRAIN_FILE))
-}
-
-function markov(msg,        len, seed, argv, sentence) {
-	len = split(msg, words, " ")
-	if (len > 0)
-		seed = words[randrange(1, len)]
-
-	argv = "awk -f markov.awk -v dendrites=" shell_quote(DENDRITE_COUNT)
-	argv = argv " -v seed=" shell_quote(seed)
-	argv = argv " " shell_quote(BRAIN_FILE)
-
-	return get_output(argv)
+function markov(channel, msg,        cmd) {
+	cmd = "python3 markov.py " shell_quote(BRAIN_FILE)
+	printf "%s %s\n", channel, msg | cmd
+	close(cmd)
 }
 
 function learn(msg,        words, i, len) {
@@ -227,7 +217,7 @@ function learn(msg,        words, i, len) {
 function chat(channel, nick, msg) {
 	if (tolower(msg) ~ CHAT_PATTERN || randrange(0, 300) == 67) {
 		sub(ADDRESS_PATTERN, "", msg)
-		say(channel, markov(msg))
+		markov(channel, msg)
 	}
 
 	if (!index(msg, "http") && randrange(0, 10) == 7)
@@ -235,12 +225,7 @@ function chat(channel, nick, msg) {
 }
 
 function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
-	if (cmd[1] == "reload") {
-		load_neurons()
-		say(channel, "OK - " DENDRITE_COUNT " dendrites loaded")
-	}
-
-	else if (cmd[1] == "sync") {
+	if (cmd[1] == "sync") {
 		irccmd("WHOIS", NICK)
 	}
 
@@ -277,7 +262,7 @@ function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
 
 function user(channel, nick, cmd, cmdlen) {
 	if (cmd[1] == "status") {
-		msg = "Child #" CHILD ": " age() " old with " DENDRITE_COUNT " dendrites, " NR " messages read"
+		msg = "Child #" CHILD ": " age() " old with " NR " messages read"
 		say(channel, msg)
 	}
 
@@ -337,7 +322,6 @@ BEGIN {
 	}
 
 	notice("****** STARTING CHILD #" CHILD " ******")
-	load_neurons()
 	BIRTH = systime()
 
 	set_nick(NICK)
