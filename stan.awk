@@ -184,10 +184,9 @@ function randnick(channel,        i, j) {
 	}
 }
 
-function markov(channel, msg,        cmd) {
-	cmd = "python3 markov.py " shell_quote(BRAIN_FILE)
-	printf "%s %s\n", channel, msg | cmd
-	close(cmd)
+function markov(channel, msg) {
+	printf "%s %s\n", channel, msg | MARKOV_ARGV
+	fflush(MARKOV_ARGV)
 }
 
 function learn(msg,        words, i, len) {
@@ -323,7 +322,7 @@ BEGIN {
 
 	notice("****** STARTING CHILD #" CHILD " ******")
 	BIRTH = systime()
-
+	MARKOV_ARGV = "python3 markov.py " shell_quote(BRAIN_FILE)
 	set_nick(NICK)
 
 	if (CHILD == "1")
@@ -493,4 +492,8 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 
 	else
 		chat(channel, nick, msg)
+}
+
+END {
+	close(MARKOV_ARGV)
 }
