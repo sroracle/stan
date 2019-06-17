@@ -1,6 +1,10 @@
+*.bak
 *.cfg
 *.db
-*.bak
-*.swp
 *.sqlite
+*.swp
+.py
+__pycache__
+data
+fedi.sh
 stan.sh
