@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: EFL-2.0
+# Copyright (c) 2019 Lee Starnes
+# Copyright (c) 2019 Max Rees
+# See LICENSE for more information.
 import os
 import sqlite3
 import sys
