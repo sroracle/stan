@@ -40,7 +40,7 @@ with conn, open(brain_filename, "r", errors="ignore") as brainfile:
     for line in brainfile:
         splitline = line.split(" ", 1)
         keyword = splitline[0]
-        chains = splitline[1]
+        chains = splitline[1].rstrip("\n")
         splitchains = chains.split('\035')
 
         for chain in splitchains:
