@@ -21,7 +21,6 @@ Administrative commands
 * `%nick`
 * `%part`
 * `%quit`
-* `%reload`
 * `%restart`
 * `%say`
 * `%sync`
