@@ -30,28 +30,38 @@ print("Converting old brain {} to sqlite3 brain {}...".format(brain_filename, ne
 
 conn = sqlite3.connect(new_brain)
 
-conn.execute("""
+conn.executescript("""
 CREATE TABLE brain (
-    keyword TEXT,
-    chain TEXT
+    keyword BLOB,
+    chain1 BLOB,
+    chain2 BLOB
 );
+CREATE INDEX brain_keyword ON brain(keyword);
+CREATE INDEX brain_chain2 ON brain(chain2);
 """
 )
 
-conn.execute("CREATE INDEX brain_keyword ON brain(keyword);")
-
-with conn, open(brain_filename, "r", errors="ignore") as brainfile:
+with conn, open(brain_filename, "rb") as brainfile:
     for line in brainfile:
-        splitline = line.split(" ", 1)
-        keyword = splitline[0]
-        chains = splitline[1].rstrip("\n")
-        splitchains = chains.split('\035')
+        line = line.split(b" ", maxsplit=1)
+        keyword = line[0]
+        chains = line[1].rstrip(b"\n").split(b"\035")
 
-        for chain in splitchains:
+        for chain in chains:
+            chain = chain.split(b" ", maxsplit=1)
+            if len(chain) < 1:
+                continue
+
+            elif len(chain) == 1:
+                chain.append(chain[0])
+                chain[0] = None
+
             try:
-                conn.execute("INSERT INTO brain (keyword, chain) VALUES (?, ?);", (keyword, chain))
+                conn.execute(
+                    "INSERT INTO brain(keyword, chain1, chain2) VALUES (?, ?, ?);",
+                    (keyword, chain[0], chain[1])
+                )
             except sqlite3.IntegrityError as e:
-                pass
+                print("Warning:", e)
 
 print("Done.")
-
