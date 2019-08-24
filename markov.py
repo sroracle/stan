@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: EFL-2.0
 # Copyright (c) 2019 Max Rees
 # See LICENSE for more information.
-import random  # choice, randint
-import sqlite3 # connect
-import sys     # argv, exit, stdin, stdout
+import collections # deque
+import random      # choice, randint
+import sqlite3     # connect
+import sys         # argv, exit, stdin, stdout
 from pathlib import Path
 
 def backtrack(db, seed):
@@ -38,7 +39,21 @@ def chain_from_none(db):
 
     return words
 
-def markov(db, seed):
+def chain_from_ctx_or_none(db, context):
+    words = None
+
+    n = len(context) if context else None
+    if n:
+        i = random.randrange(0, n)
+        seed = context[i]
+        words = chain_from_seed(db, seed)
+
+    if not words:
+        words = chain_from_none(db)
+
+    return words
+
+def markov(db, seed, *, context=None):
     seed = seed.strip()
     original_seed = seed
     want_len = random.randint(1, 10)
@@ -70,7 +85,7 @@ def markov(db, seed):
         words = chain_from_seed(db, seed)
 
         if not words:
-            words = chain_from_none(db)
+            words = chain_from_ctx_or_none(db, context)
 
         words = list(words)
         if words[0] == None:
@@ -91,6 +106,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     brain = sys.argv[1]
+    context = collections.deque(maxlen=16)
 
     if not Path(brain).exists():
         sys.exit(1)
@@ -103,20 +119,28 @@ if __name__ == "__main__":
     )
 
     for line in sys.stdin:
-        line = line.rstrip(b"\n").split(b" ")
+        line = line.strip().split(b" ")
 
-        if len(line) < 1:
+        if len(line) < 2:
             continue
-        elif len(line) == 1:
-            recipient = line[0]
-            seed = chain_from_none(db)[0]
         elif len(line) == 2:
-            recipient, seed = line
+            trigger, recipient = line
+            seed = chain_from_ctx_or_none(db, context)[0]
+        elif len(line) == 3:
+            trigger, recipient, seed = line
         else:
-            recipient = line[0]
-            seed = random.choice(line[1:])
+            trigger, recipient = line[0:2]
+            seed = random.choice(line[2:])
 
-        sentence = markov(db, seed)
+        context.extend(line[2:])
+        trigger = int(trigger)
+        if trigger == 0:
+            continue
+
+        while not seed:
+            seed = chain_from_ctx_or_none(db, context)[0]
+
+        sentence = markov(db, seed, context=context)
 
         if b"\x01ACTION" in sentence:
             sentence = sentence.split(b"\x01ACTION")

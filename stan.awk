@@ -184,8 +184,8 @@ function randnick(channel,        i, j) {
 	}
 }
 
-function markov(channel, msg) {
-	printf "%s %s\n", channel, msg | MARKOV_ARGV
+function markov(trigger, channel, msg) {
+	printf "%d %s %s\n", trigger, channel, msg | MARKOV_ARGV
 	fflush(MARKOV_ARGV)
 }
 
@@ -216,7 +216,14 @@ function learn(msg,        words, i, len) {
 function chat(channel, nick, msg) {
 	if (tolower(msg) ~ CHAT_PATTERN || randrange(0, 300) == 67) {
 		sub(ADDRESS_PATTERN, "", msg)
-		markov(channel, msg)
+		if (msg ~ "^\s*h\s*$")
+			say(channel, "h")
+		else
+			markov(1, channel, msg)
+	}
+
+	else {
+		markov(0, channel, msg)
 	}
 
 	if (!index(msg, "http") && randrange(0, 10) == 7)
