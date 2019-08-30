@@ -10,7 +10,7 @@ from pathlib import Path
 
 from mastodon import Mastodon as Fedi
 
-from markov import markov
+from markov import markov, chain_from_none
 
 class TakeADump(html.parser.HTMLParser):
     def __init__(self, feed, **kwargs):
@@ -35,4 +35,10 @@ if not Path(sys.argv[2]).exists():
 
 brain = f"file:{sys.argv[2]}?mode=ro"
 db = sqlite3.connect(brain, uri=True)
-login.toot(markov(db, random.choice(last_post)))
+
+if last_post:
+    seed = random.choice(last_post).encode("utf-8", errors="replace")
+else:
+    seed = random.choice(chain_from_none(db))
+
+login.toot(markov(db, seed))
