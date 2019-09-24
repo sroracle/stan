@@ -213,6 +213,182 @@ function learn(msg,        words, i, len) {
 	close(BRAIN_FILE ".new")
 }
 
+function has_card(w_card, w_color, w_number,        color, number, card, card_v) {
+	if (w_card)
+		record("w_card = '" w_card "'")
+	if (w_color)
+		record("w_color = '" w_color "'")
+	if (w_number)
+		record("w_number = '" w_number "'")
+
+	for (card in CARDS) {
+		split(CARDS[card], card_v, / /)
+		color = card_v[1]
+		number = card_v[2]
+
+		if (!color)
+			continue
+
+		if (w_card && CARDS[card] == w_card)
+			return CARDS[card]
+		if (w_color && color == w_color)
+			return CARDS[card]
+		if (w_number && number == w_number)
+			return CARDS[card]
+	}
+	return ""
+}
+
+function decide_play(channel, new_card,        play) {
+	if (new_card) {
+		delete CARDS
+		CARDS[1] = new_card
+	}
+
+	if (DISCARD == "Wild +4" && PLUS_TARGET) {
+		play = has_card("Wild +4", "", "")
+	}
+	else if (D_NUMBER == "+2" && PLUS_TARGET) {
+		play = has_card("", "", "+2")
+		if (!play)
+			play = has_card(D_COLOR " Reverse")
+		if (!play)
+			play = has_card("Wild +4", "", "")
+	} else {
+		play = has_card("", D_COLOR, "")
+		if (!play)
+			play = has_card("", "", D_NUMBER)
+		if (!play)
+			play = has_card("Wild", "", "")
+		if (!play)
+			play = has_card("Wild +4", "", "")
+		if (!play) {
+			if (new_card)
+				play_card(channel, "pa")
+			else
+				play_card(channel, "pe")
+			return
+		}
+	}
+
+	if (!play && new_card)
+		play = "pa"
+	else if (!play && !new_card)
+		play = "pe"
+
+	play_card(channel, play)
+}
+
+function play_card(channel, card,        card_v, color, number, i, new_color) {
+	if (!card) {
+		say(channel, "pe")
+		return
+	}
+
+	if (card == "pe" || card == "pa") {
+		say(channel, card)
+		return
+	}
+
+	split(card, card_v, / /)
+	color = card_v[1]
+	number = card_v[2]
+
+	if (color == "Red")
+		color = "r"
+	else if (color == "Blue")
+		color = "b"
+	else if (color == "Yellow")
+		color = "y"
+	else if (color == "Green")
+		color = "g"
+	else if (color == "Wild")
+		color = "w"
+
+	if (number == "Reverse")
+		number = "r"
+	else if (number == "Skip")
+		number = "s"
+
+	if (color == "w") {
+		i = randrange(1, 4)
+		if (i == 1)
+			new_color = "r"
+		else if (i == 2)
+			new_color = "b"
+		else if (i == 3)
+			new_color = "y"
+		else
+			new_color = "g"
+	} else
+		new_color = ""
+
+	say(channel, "pl " color " " number " " new_color)
+}
+
+function uno(channel, msg,        card, discard_v, play) {
+	gsub(/[\x03\x02\x1d\x1f\x16\x0f]/, "", msg)
+	gsub(/01,09W00,12i01,08l00,04d01,09/, "Wild", msg)
+	gsub(/00,12[+]01,08400,04/, "+4", msg)
+	sub(/[ ]+$/, "", msg)
+
+	if (msg ~ /^Your cards: /) {
+		delete CARDS
+		sub(/^Your cards: /, "", msg)
+		split(msg, CARDS, /[ ]*[0-9][0-9],[0-9][0-9][ ]*/)
+		for (card in CARDS) {
+			printf "card = '%s'\n", CARDS[card] > "/dev/stderr"
+			fflush("/dev/stderr")
+		}
+		say(UNO_CHAN, "cd")
+	}
+
+	else if (msg ~ /^Current discard: /) {
+		sub(/^Current discard: /, "", msg)
+		gsub(/[0-9][0-9],[0-9][0-9][ ]*/, "", msg)
+		gsub(/[ ]+/, " ", msg)
+		DISCARD = msg
+		split(msg, discard_v, / /)
+		D_COLOR = discard_v[1]
+		D_NUMBER = discard_v[2]
+
+		# Wild
+		if (D_COLOR == "Wild" && D_NUMBER != "+4") {
+			DISCARD = D_NUMBER " *"
+			D_COLOR = D_NUMBER
+			D_NUMBER = ""
+		}
+		# Wild +4 with color
+		if (D_COLOR == "Wild" && D_NUMBER == "+4") {
+			DISCARD = "Wild +4"
+		}
+		if (discard_v[3] && !PLUS_TARGET) {
+			DISCARD = discard_v[3] " *"
+			D_COLOR = discard_v[3]
+			D_NUMBER = ""
+		}
+		else if (discard_v[4] && !PLUS_TARGET) {
+			DISCARD = discard_v[4] " *"
+			D_COLOR = discard_v[4]
+			D_NUMBER = ""
+		}
+
+		record("DISCARD = '" DISCARD "'")
+		record("D_COLOR = '" D_COLOR "'")
+		record("D_NUMBER = '" D_NUMBER "'")
+
+		decide_play(UNO_CHAN, "")
+		PLUS_TARGET = ""
+	}
+
+	else if (msg ~ /^You picked/) {
+		sub(/^You picked/, "", msg)
+		sub(/[ ]*[0-9][0-9],[0-9][0-9][ ]*/, "", msg)
+		printf "msg = '%s'\n", msg > "/dev/stderr"
+		decide_play(UNO_CHAN, msg)
+	}
+}
+
 function chat(channel, nick, msg) {
 	if (tolower(msg) ~ CHAT_PATTERN || randrange(0, 300) == 67) {
 		sub(ADDRESS_PATTERN, "", msg)
@@ -302,6 +478,14 @@ function user(channel, nick, cmd, cmdlen) {
 			target = randnick(channel)
 
 		say(channel, "i fucking hate " target ". i bet they cnt evil lift many miligram of cocain with penis")
+	}
+
+	else if (cmd[1] == "uno") {
+		if (cmd[2])
+			UNO_CHAN = cmd[2]
+		else
+			UNO_CHAN = channel
+		say(UNO_CHAN, "jo")
 	}
 }
 
@@ -496,6 +680,21 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 
 		user(channel, nick, cmd, cmdlen)
 	}
+
+	else if (msg ~ /^Your cards: / || msg ~ /^You picked/ || msg ~ /^Current discard: /)
+		uno(channel, msg)
+
+	else if (msg ~ /^next player must respond correctly/)
+		PLUS_TARGET = 1
+
+	else if (msg == "you can't do that, " NICK)
+		say(channel, "pe")
+
+	else if (msg ~ "^it's \x02" NICK "\x02's turn$" || msg ~ "^\x02" NICK "\x02 plays")
+		next
+
+	else if (msg ~ "^\x02" NICK "\x02 passes turn$" || msg ~ "^\x02" NICK "\x02 picks a card$")
+		next
 
 	else
 		chat(channel, nick, msg)
