@@ -40,8 +40,13 @@ def generate_post(fedi, db, seed_post, reply=False):
         seed = random.choice(chain_from_none(db))
 
     if reply:
-        mention = b"@" + seed_post.account.username.encode("utf-8") + b" "
-        fedi.status_post(mention + markov(db, seed), in_reply_to_id=seed_post)
+        mentions = [b"@" + seed_post.account.acct.encode("utf-8")]
+        for i in seed_post.mentions:
+            if i.acct == "Stan":
+                continue
+            mentions.append(b"@" + i.acct.encode("utf-8"))
+        mentions = b" ".join(mentions) + b" "
+        fedi.status_post(mentions + markov(db, seed), in_reply_to_id=seed_post)
     else:
         fedi.status_post(markov(db, seed))
 
