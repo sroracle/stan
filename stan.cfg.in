@@ -14,6 +14,8 @@ CMD_PATTERN=^[%]
 # Which channels to join (one per line)
 CHANNELS=#bots
 CHANNELS=#stan
+# Which channels to chat in (subset of CHANNELS, one per line)
+CHAT_CHANS=#stan
 # Which nicks to ignore (one per line)
 IGNORE=BotServ
 IGNORE=ChanServ

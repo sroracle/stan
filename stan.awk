@@ -27,6 +27,8 @@ function load_config() {
 			CMD_PATTERN = $2
 		else if ($1 == "CHANNELS")
 			CHANNELS[$2] = 0
+		else if ($1 == "CHAT_CHANS")
+			CHAT_CHANS[$2] = 0
 		else if ($1 == "IGNORE")
 			IGNORE[$2] = 1
 		else if ($1 == "IGNOREPAT")
@@ -213,6 +215,9 @@ function learn(msg,        words, i, len) {
 }
 
 function chat(channel, nick, msg) {
+	if (!(channel in CHAT_CHANS))
+		return
+
 	if (tolower(msg) ~ CHAT_PATTERN || randrange(0, 300) == 67) {
 		sub(ADDRESS_PATTERN, "", msg)
 		if (msg ~ "^\s*h\s*$")
@@ -460,6 +465,12 @@ function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
 		notice("****** STOPPING CHILD #" CHILD " ******")
 		exit 69
 	}
+
+	else if (cmd[1] == "chat")
+		CHAT_CHANS[channel] = 0
+
+	else if (cmd[1] == "quiet")
+		delete CHAT_CHANS[channel]
 
 	else if (cmd[1] == "quit")
 		irccmd("QUIT", ":See ya later")
