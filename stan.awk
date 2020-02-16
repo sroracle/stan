@@ -55,8 +55,7 @@ function slice(array, lower, upper,        i) {
 		return s
 }
 
-function shell_quote(str,        SINGLE, QSINGLE, len, exploded, i)
-{
+function shell_quote(str,        SINGLE, QSINGLE, len, exploded, i) {
     if (str == "")
         return "\047\047"
 
@@ -213,6 +212,23 @@ function learn(msg,        words, i, len) {
 	close(BRAIN_FILE ".new")
 }
 
+function chat(channel, nick, msg) {
+	if (tolower(msg) ~ CHAT_PATTERN || randrange(0, 300) == 67) {
+		sub(ADDRESS_PATTERN, "", msg)
+		if (msg ~ "^\s*h\s*$")
+			say(channel, "h")
+		else
+			markov(1, channel, msg)
+	}
+
+	else {
+		markov(0, channel, msg)
+	}
+
+	if (!index(msg, "http") && randrange(0, 10) == 7)
+		learn(msg)
+}
+
 function has_card(w_card, w_color, w_number,        color, number, card, card_v) {
 	if (w_card)
 		record("w_card = '" w_card "'")
@@ -354,10 +370,10 @@ function uno(channel, msg,        card, discard_v, play) {
 		delete CARDS
 		sub(/^Your cards: /, "", msg)
 		split(msg, CARDS, /[ ]*[0-9][0-9],[0-9][0-9][ ]*/)
-		for (card in CARDS) {
-			printf "card = '%s'\n", CARDS[card] > "/dev/stderr"
-			fflush("/dev/stderr")
-		}
+		for (card in CARDS)
+			if (!CARDS[card])
+				continue
+			record("card = '" CARDS[card] "'")
 	}
 
 	else if (msg ~ /^color is now/) {
@@ -410,9 +426,8 @@ function uno(channel, msg,        card, discard_v, play) {
 			D_NUMBER = ""
 		}
 		# Wild +4 with color
-		if (D_COLOR == "Wild" && D_NUMBER == "+4") {
+		if (D_COLOR == "Wild" && D_NUMBER == "+4")
 			DISCARD = "Wild +4"
-		}
 		if (discard_v[3] && !PLUS_TARGET) {
 			DISCARD = discard_v[3] " *"
 			D_COLOR = discard_v[3]
@@ -433,27 +448,9 @@ function uno(channel, msg,        card, discard_v, play) {
 		chat(channel, nick, msg)
 }
 
-function chat(channel, nick, msg) {
-	if (tolower(msg) ~ CHAT_PATTERN || randrange(0, 300) == 67) {
-		sub(ADDRESS_PATTERN, "", msg)
-		if (msg ~ "^\s*h\s*$")
-			say(channel, "h")
-		else
-			markov(1, channel, msg)
-	}
-
-	else {
-		markov(0, channel, msg)
-	}
-
-	if (!index(msg, "http") && randrange(0, 10) == 7)
-		learn(msg)
-}
-
 function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
-	if (cmd[1] == "sync") {
+	if (cmd[1] == "sync")
 		irccmd("WHOIS", NICK)
-	}
 
 	else if (cmd[1] == "identify")
 		identify()
@@ -492,9 +489,8 @@ function user(channel, nick, cmd, cmdlen) {
 		say(channel, msg)
 	}
 
-	else if (cmd[1] == "uptime") {
+	else if (cmd[1] == "uptime")
 		say(channel, get_output("uptime"))
-	}
 
 	else if (cmd[1] == "police") {
 		if (cmd[2] == "ON")
