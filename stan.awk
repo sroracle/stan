@@ -355,7 +355,7 @@ function uno(channel, msg,        card, discard_v, play) {
 		say(UNO_CHAN, "pe")
 
 	else if (msg == NICK " picks a card" || msg == NICK " passes turn")
-		next
+		return
 
 	else if (msg ~ /^next player must respond correctly/)
 		PLUS_TARGET = 1
@@ -698,12 +698,11 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 	} else
 		fmt = "(" channel ") <" nick ">"
 
-	for (pattern in IGNOREPAT) {
+	for (pattern in IGNOREPAT)
 		if (msg ~ pattern) {
 			record_once(sprintf("~~~ %s %s", fmt, msg))
 			next
 		}
-	}
 
 	if (nick in IGNORE || nick == NICK) {
 		record_once(sprintf("~~~ %s %s", fmt, msg))
