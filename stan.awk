@@ -332,7 +332,25 @@ function uno(channel, msg,        card, discard_v, play) {
 	gsub(/00,12[+]01,08400,04/, "+4", msg)
 	sub(/[ ]+$/, "", msg)
 
-	if (msg ~ /^Your cards: /) {
+	if (msg == "it's " NICK "'s turn")
+		decide_play(UNO_CHAN, "")
+
+	else if (msg == "you can't do that, " NICK)
+		say(UNO_CHAN, "pe")
+
+	else if (msg == NICK " picks a card" || msg == NICK " passes turn")
+		next
+
+	else if (msg ~ /^next player must respond correctly/)
+		PLUS_TARGET = 1
+
+	else if (msg ~ /^You picked/) {
+		sub(/^You picked/, "", msg)
+		sub(/[ ]*[0-9][0-9],[0-9][0-9][ ]*/, "", msg)
+		decide_play(UNO_CHAN, msg)
+	}
+
+	else if (msg ~ /^Your cards: /) {
 		delete CARDS
 		sub(/^Your cards: /, "", msg)
 		split(msg, CARDS, /[ ]*[0-9][0-9],[0-9][0-9][ ]*/)
@@ -340,11 +358,44 @@ function uno(channel, msg,        card, discard_v, play) {
 			printf "card = '%s'\n", CARDS[card] > "/dev/stderr"
 			fflush("/dev/stderr")
 		}
-		say(UNO_CHAN, "cd")
 	}
 
-	else if (msg ~ /^Current discard: /) {
+	else if (msg ~ /^color is now/) {
+		sub(/^color is now /, "", msg)
+		gsub(/[0-9][0-9],[0-9][0-9][ ]*/, "", msg)
+		gsub(/[ ]+/, " ", msg)
+
+		if (PLUS_TARGET)
+			NEXT_COLOR = msg
+		else {
+			DISCARD = msg " *"
+			D_COLOR = msg
+			D_NUMBER = ""
+
+			record("DISCARD = '" DISCARD "'")
+			record("D_COLOR = '" D_COLOR "'")
+			record("D_NUMBER = '" D_NUMBER "'")
+		}
+	}
+
+	else if (msg ~ /has to pick/ || msg ~ /must pick/) {
+		PLUS_TARGET = ""
+		if (NEXT_COLOR) {
+			DISCARD = NEXT_COLOR " *"
+			D_COLOR = NEXT_COLOR
+			D_NUMBER = ""
+			NEXT_COLOR = ""
+
+			record("DISCARD = '" DISCARD "'")
+			record("D_COLOR = '" D_COLOR "'")
+			record("D_NUMBER = '" D_NUMBER "'")
+		}
+	}
+
+	else if (msg ~ /^Current discard: / || msg ~ / plays /) {
 		sub(/^Current discard: /, "", msg)
+		sub(/^.* plays /, "", msg)
+		sub(/ twice!$/, "", msg)
 		gsub(/[0-9][0-9],[0-9][0-9][ ]*/, "", msg)
 		gsub(/[ ]+/, " ", msg)
 		DISCARD = msg
@@ -376,17 +427,10 @@ function uno(channel, msg,        card, discard_v, play) {
 		record("DISCARD = '" DISCARD "'")
 		record("D_COLOR = '" D_COLOR "'")
 		record("D_NUMBER = '" D_NUMBER "'")
-
-		decide_play(UNO_CHAN, "")
-		PLUS_TARGET = ""
 	}
 
-	else if (msg ~ /^You picked/) {
-		sub(/^You picked/, "", msg)
-		sub(/[ ]*[0-9][0-9],[0-9][0-9][ ]*/, "", msg)
-		printf "msg = '%s'\n", msg > "/dev/stderr"
-		decide_play(UNO_CHAN, msg)
-	}
+	else
+		chat(channel, nick, msg)
 }
 
 function chat(channel, nick, msg) {
@@ -681,20 +725,8 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 		user(channel, nick, cmd, cmdlen)
 	}
 
-	else if (msg ~ /^Your cards: / || msg ~ /^You picked/ || msg ~ /^Current discard: /)
+	else if (nick == "Rick")
 		uno(channel, msg)
-
-	else if (msg ~ /^next player must respond correctly/)
-		PLUS_TARGET = 1
-
-	else if (msg == "you can't do that, " NICK)
-		say(channel, "pe")
-
-	else if (msg ~ "^it's \x02" NICK "\x02's turn$" || msg ~ "^\x02" NICK "\x02 plays")
-		next
-
-	else if (msg ~ "^\x02" NICK "\x02 passes turn$" || msg ~ "^\x02" NICK "\x02 picks a card$")
-		next
 
 	else
 		chat(channel, nick, msg)
