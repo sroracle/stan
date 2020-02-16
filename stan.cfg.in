@@ -16,6 +16,8 @@ CHANNELS=#bots
 CHANNELS=#stan
 # Which channels to chat in (subset of CHANNELS, one per line)
 CHAT_CHANS=#stan
+# Nick of the bot controlling the UNO game
+UNO_MASTER=UNO
 # Which nicks to ignore (one per line)
 IGNORE=BotServ
 IGNORE=ChanServ

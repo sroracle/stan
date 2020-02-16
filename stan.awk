@@ -29,6 +29,8 @@ function load_config() {
 			CHANNELS[$2] = 0
 		else if ($1 == "CHAT_CHANS")
 			CHAT_CHANS[$2] = 0
+		else if ($1 == "UNO_MASTER")
+			UNO_MASTER = $2
 		else if ($1 == "IGNORE")
 			IGNORE[$2] = 1
 		else if ($1 == "IGNOREPAT")
@@ -731,7 +733,7 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 		user(channel, nick, cmd, cmdlen)
 	}
 
-	else if (nick == "Rick")
+	else if (nick == UNO_MASTER)
 		uno(channel, msg)
 
 	else
