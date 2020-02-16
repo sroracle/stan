@@ -56,6 +56,7 @@ function slice(array, lower, upper,        i) {
 		s = ""
 		for (i = lower; i <= upper; i++)
 			s = s " " array[i]
+		sub(/^ /, "", s)
 		return s
 }
 
