@@ -109,8 +109,10 @@ function send(msg) {
 }
 
 function say(channel, msg) {
-	if (length(msg) > 450)
-		msg = substr(msg, 1, 450) " [...]"
+	if (length(msg) > 450) {
+		MORE[channel] = substr(msg, 451, length(msg))
+		msg = substr(msg, 1, 450) " [%more]"
+	}
 
 	record_once(sprintf(">>> (%s) <%s> %s", channel, NICK, msg))
 	send("PRIVMSG " channel " :" msg)
@@ -497,10 +499,19 @@ function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
 		send("PRIVMSG " cmd[2] " :" slice(cmd, 3, cmdlen))
 }
 
-function user(channel, nick, cmd, cmdlen) {
+function user(channel, nick, cmd, cmdlen,        msg) {
 	if (cmd[1] == "status") {
 		msg = "Child #" CHILD ": " age() " old with " NR " messages read"
 		say(channel, msg)
+	}
+
+	else if (cmd[1] == "more") {
+		if (MORE[channel]) {
+			msg = MORE[channel]
+			MORE[channel] = ""
+			say(channel, msg)
+		} else
+			say(channel, "That's it.")
 	}
 
 	else if (cmd[1] == "uptime")
