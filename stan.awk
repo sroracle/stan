@@ -13,6 +13,8 @@ function load_config() {
 	while ((getline < ENVIRON["STAN_CFG"]) == 1) {
 		if ($1 == "BRAIN_FILE")
 			BRAIN_FILE = $2
+		else if ($1 == "QUOTE_FILE")
+			QUOTE_FILE = $2
 		else if ($1 == "OWNERMASK")
 			OWNERMASK = $2
 		else if ($1 == "NICK")
@@ -458,6 +460,41 @@ function uno(channel, msg,        card, discard_v, play) {
 		chat(channel, nick, msg)
 }
 
+function grab_quote(qchan, nick, quote) {
+	if (nick && !((qchan, nick) in QUOTES)) {
+		say(channel, "who?")
+		return
+	} else if (nick)
+		quote = QUOTES[qchan, nick]
+	else if (qchan && (qchan in QUOTES))
+		quote = QUOTES[qchan]
+	else if (quote)
+		quote = quote
+	else {
+		say(channel, "huh?")
+		return
+	}
+
+	print quote >> (QUOTE_FILE)
+	fflush(QUOTE_FILE)
+	say(channel, "Quote added")
+}
+
+function rand_quote(search,        argv, quote) {
+	if (search) {
+		argv = "grep -F " shell_quote(search) " " shell_quote(QUOTE_FILE)
+		argv = argv " | shuf -n1 "
+	} else
+		argv = "shuf -n1 " shell_quote(QUOTE_FILE)
+
+	argv | getline quote
+	close(argv)
+	if (!quote)
+		say(channel, "No results")
+	else
+		say(channel, quote)
+}
+
 function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
 	if (cmd[1] == "sync")
 		irccmd("WHOIS", NICK)
@@ -551,6 +588,23 @@ function user(channel, nick, cmd, cmdlen,        msg) {
 		else
 			UNO_CHAN = channel
 		say(UNO_CHAN, "jo")
+	}
+
+	else if (cmd[1] == "add" && cmd[2])
+		grab_quote("", "", slice(cmd, 2, cmdlen))
+
+	else if (cmd[1] == "grab") {
+		if (cmd[2])
+			grab_quote(channel, cmd[2])
+		else
+			grab_quote(channel)
+	}
+
+	else if (cmd[1] == "rand") {
+		if (cmd[2])
+			rand_quote(slice(cmd, 2, cmdlen))
+		else
+			rand_quote()
 	}
 }
 

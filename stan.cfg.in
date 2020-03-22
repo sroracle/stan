@@ -1,5 +1,7 @@
 # File to load neurons from / save neurons to
 BRAIN_FILE=brain.db
+# File to load quotes from / save quotes to
+QUOTE_FILE=quotes.db
 # username@hostname or vhost of the bot's owner (allowed to run admin commands)
 OWNERMASK=owner@owner.host
 NICK=Stan
