@@ -39,6 +39,12 @@ def chain_from_none(db):
 
     return words
 
+def new_chain(db, keyword, chain1, chain2):
+    db.execute(
+        "INSERT INTO brain(keyword, chain1, chain2) VALUES (?, ?, ?);",
+        (keyword, chain1, chain2),
+    )
+
 def chain_from_ctx_or_none(db, context):
     words = None
 
@@ -101,6 +107,48 @@ def markov(db, seed, *, context=None):
     sentence = b" ".join(sentence)
     return sentence
 
+def speak(db, seed, context):
+    while not seed:
+        seed = chain_from_ctx_or_none(db, context)[0]
+
+    sentence = markov(db, seed, context=context)
+
+    if b"\x01ACTION" in sentence:
+        sentence = sentence.split(b"\x01ACTION")
+        sentence[0].strip()
+        sentence[0] = b"PRIVMSG %b :%b\r\n" % (recipient, sentence[0])
+        sys.stdout.buffer.write(sentence[0])
+
+        for i in sentence[1:]:
+            i = i.strip().replace(b"\x01", b"")
+            i = b"PRIVMSG %b :\x01ACTION %b\x01\r\n" % (recipient, i)
+            sys.stdout.buffer.write(i)
+
+    else:
+        sentence = b"PRIVMSG %b :%b\r\n" % (recipient, sentence)
+        sys.stdout.buffer.write(sentence)
+
+    sys.stdout.flush()
+
+def learn(db, line):
+    length = len(line)
+    if length < 2:
+        return
+    print("*** Learning...", file=sys.stderr)
+
+    if length < 3:
+        return new_chain(db, line[0], None, line[1])
+
+    for i in range(0, length - 2):
+        if i + 1 > length - 2:
+            end = b"\036"
+        else:
+            end = b""
+
+        new_chain(db, line[i], line[i + 1], line[i + 2] + end)
+
+    db.commit()
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit(1)
@@ -111,8 +159,7 @@ if __name__ == "__main__":
     if not Path(brain).exists():
         sys.exit(1)
 
-    brain = f"file:{brain}?mode=ro"
-    db = sqlite3.connect(brain, uri=True)
+    db = sqlite3.connect(brain)
 
     sys.stdin = open(
         sys.stdin.fileno(), mode="rb",
@@ -137,24 +184,8 @@ if __name__ == "__main__":
         if trigger == 0:
             continue
 
-        while not seed:
-            seed = chain_from_ctx_or_none(db, context)[0]
+        if trigger == 1:
+            learn(db, line[2:])
 
-        sentence = markov(db, seed, context=context)
-
-        if b"\x01ACTION" in sentence:
-            sentence = sentence.split(b"\x01ACTION")
-            sentence[0].strip()
-            sentence[0] = b"PRIVMSG %b :%b\r\n" % (recipient, sentence[0])
-            sys.stdout.buffer.write(sentence[0])
-
-            for i in sentence[1:]:
-                i = i.strip().replace(b"\x01", b"")
-                i = b"PRIVMSG %b :\x01ACTION %b\x01\r\n" % (recipient, i)
-                sys.stdout.buffer.write(i)
-
-        else:
-            sentence = b"PRIVMSG %b :%b\r\n" % (recipient, sentence)
-            sys.stdout.buffer.write(sentence)
-
-        sys.stdout.flush()
+        elif trigger == 2:
+            speak(db, seed, context)

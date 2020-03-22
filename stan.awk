@@ -31,6 +31,8 @@ function load_config() {
 			CHANNELS[$2] = 0
 		else if ($1 == "CHAT_CHANS")
 			CHAT_CHANS[$2] = 0
+		else if ($1 == "LEARN_CHANS")
+			LEARN_CHANS[$2] = 0
 		else if ($1 == "UNO_MASTER")
 			UNO_MASTER = $2
 		else if ($1 == "IGNORE")
@@ -193,52 +195,30 @@ function randnick(channel,        i, j) {
 }
 
 function markov(trigger, channel, msg) {
+	debug(trigger " " channel " " msg)
 	printf "%d %s %s\n", trigger, channel, msg | MARKOV_ARGV
 	fflush(MARKOV_ARGV)
 }
 
-function learn(msg,        words, i, len) {
-	len = split(msg, words, " ")
-	if (len < 2)
-		return
-
-	notice("Learning...")
-	if (len < 3) {
-		printf "%s %s\036\n", words[1], words[2] >> (BRAIN_FILE ".new")
-		fflush(BRAIN_FILE ".new")
-		close(BRAIN_FILE ".new")
-		return
-	}
-
-	for (i = 1; i <= len - 2; i++) {
-		if (i + 1 > len - 2)
-			end = "\036"
-		else
-			end = ""
-		printf "%s %s %s%s\n", words[i], words[i + 1], words[i + 2], end >> (BRAIN_FILE ".new")
-	}
-	fflush(BRAIN_FILE ".new")
-	close(BRAIN_FILE ".new")
-}
-
 function chat(channel, nick, msg) {
-	if (!(channel in CHAT_CHANS))
-		return
-
-	if (tolower(msg) ~ CHAT_PATTERN || randrange(0, 300) == 67) {
+	if ( \
+			(channel in CHAT_CHANS) \
+			&& (tolower(msg) ~ CHAT_PATTERN || randrange(0, 300) == 67)) {
 		sub(ADDRESS_PATTERN, "", msg)
 		if (msg ~ "^\s*h\s*$")
 			say(channel, "h")
 		else
-			markov(1, channel, msg)
+			markov(2, channel, msg)
 	}
 
-	else {
+	else if ( \
+			(channel in LEARN_CHANS) \
+			&& !index(msg, "http") && randrange(0, 10) == 7)
+		markov(1, channel, msg)
+
+	else
 		markov(0, channel, msg)
-	}
 
-	if (!index(msg, "http") && randrange(0, 10) == 7)
-		learn(msg)
 }
 
 function has_card(w_card, w_color, w_number,        color, number, card, card_v) {
@@ -804,11 +784,16 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 		user(channel, nick, cmd, cmdlen)
 	}
 
-	else if (nick == UNO_MASTER)
-		uno(channel, msg)
+	else {
+		QUOTES[channel] = "<" nick "> " msg
+		QUOTES[channel, nick] = "<" nick "> " msg
 
-	else
-		chat(channel, nick, msg)
+		if (nick == UNO_MASTER)
+			uno(channel, msg)
+
+		else
+			chat(channel, nick, msg)
+	}
 }
 
 END {
