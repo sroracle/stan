@@ -257,6 +257,10 @@ function has_card(w_card, w_color, w_number,        color, number, card, card_v)
 		if (!color)
 			continue
 
+		record("CARDS[card] = " CARDS[card])
+		record("color = " color)
+		record("number = " number)
+
 		if (w_card && CARDS[card] == w_card)
 			return CARDS[card]
 		if (w_color && color == w_color)
@@ -382,10 +386,11 @@ function uno(channel, msg,        card, discard_v, play) {
 		delete CARDS
 		sub(/^Your cards: /, "", msg)
 		split(msg, CARDS, /[ ]*[0-9][0-9],[0-9][0-9][ ]*/)
-		for (card in CARDS)
+		for (card in CARDS) {
 			if (!CARDS[card])
 				continue
 			record("card = '" CARDS[card] "'")
+		}
 	}
 
 	else if (msg ~ /^color is now/) {
