@@ -467,7 +467,7 @@ function grab_quote(qchan, nick, quote) {
 
 function rand_quote(search,        argv, quote) {
 	if (search) {
-		argv = "grep -F " shell_quote(search) " " shell_quote(QUOTE_FILE)
+		argv = "grep -Fi " shell_quote(search) " " shell_quote(QUOTE_FILE)
 		argv = argv " | shuf -n1 "
 	} else
 		argv = "shuf -n1 " shell_quote(QUOTE_FILE)
