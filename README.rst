@@ -17,6 +17,9 @@ User commands
 	database, or grabs the last line anyone said in the channel if none is
 	given.
 
+``%more``
+  Continue speaking if the last message was too long.
+
 ``%rand [search terms]``
 	Searches the quote database case-insenitively using the given search
 	terms, or returns a completely random quote.
