@@ -784,6 +784,12 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 		user(channel, nick, cmd, cmdlen)
 	}
 
+	else if (msg ~ "^\001ACTION balefires [^\001 ]+\001$") {
+		sub("\001", "", $6)
+		if ((channel, $6) in NAMES)
+			say($6, "Sorry, you stopped existing a few minutes ago. Please sit down and be quiet until you are woven into the pattern again.")
+	}
+
 	else {
 		QUOTES[channel] = "<" nick "> " msg
 		QUOTES[channel, nick] = "<" nick "> " msg
