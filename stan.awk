@@ -708,7 +708,7 @@ $2 ~ /^353$/ {
 # QUIT
 #       $1         $2
 # :nick!user@host QUIT :msg
-$2 ~ /^(JOIN|PART|QUIT)$/ {
+$2 ~ /^(JOIN|PART|KICK|QUIT)$/ {
 	bang = index($1, "!")
 	if (!bang)
 		next
@@ -733,7 +733,7 @@ $2 ~ /^(JOIN|PART|QUIT)$/ {
 		delete NAMES[channel, nick]
 	}
 
-	else {
+	else if ($2 == "QUIT") {
 		for (bangpath in NAMES) {
 			split(bangpath, path, SUBSEP)
 			if (path[2] == nick) {
