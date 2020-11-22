@@ -480,7 +480,16 @@ function rand_quote(search,        argv, quote) {
 		say(channel, quote)
 }
 
-function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
+function empty_array(array, key1,        bangpath, path) {
+	for (bangpath in array) {
+		split(bangpath, path, SUBSEP)
+		if (path[1] != key1)
+			continue
+		delete array[bangpath]
+	}
+}
+
+function admin(channel, nick, cmd, cmdlen) {
 	if (cmd[1] == "sync")
 		irccmd("WHOIS", NICK)
 
@@ -502,20 +511,18 @@ function admin(channel, nick, cmd, cmdlen,        bangpath, path) {
 	else if (cmd[1] == "quit")
 		irccmd("QUIT", ":See ya later")
 
-	else if (cmdlen == 2) {
-		if (cmd[1] == "join") {
-			CHANNELS[cmd[2]] = 0
-			irccmd("JOIN", cmd[2])
-		}
-
-		else if (cmd[1] == "part") {
-			delete CHANNELS[cmd[2]]
-			irccmd("PART", cmd[2] " :See ya later")
-		}
-
-		else if (cmd[1] == "nick")
-			set_nick(cmd[2])
+	else if (cmd[1] == "join" && cmdlen == 2) {
+		CHANNELS[cmd[2]] = 0
+		irccmd("JOIN", cmd[2])
 	}
+
+	else if (cmd[1] == "part" && cmdlen == 2) {
+		delete CHANNELS[cmd[2]]
+		irccmd("PART", cmd[2] " :See ya later")
+	}
+
+	else if (cmd[1] == "nick" && cmdlen == 2)
+		set_nick(cmd[2])
 
 	else if (cmd[1] == "say" && cmdlen > 2)
 		send("PRIVMSG " cmd[2] " :" slice(cmd, 3, cmdlen))
@@ -642,7 +649,7 @@ BEGIN {
 }
 
 # Welcome message - usually safe to join now
-$2 ~ /^001$/ {
+$2 == "001" {
 	notice("Connected!")
 	identify()
 	for (channel in CHANNELS)
@@ -657,7 +664,7 @@ $2 ~ /^[459][0-9][0-9]/ {
 # WHOIS
 #    $1   $2   $3   $4     $5      $6      $7
 # :server 319 NICK nick :#chan1 +#chan2 @#chan3
-$2 ~ /^319$/ {
+$2 == "319" {
 	if ($4 == NICK) {
 		for (i = 5; i <= NF; i++) {
 			channel = $(i)
@@ -671,16 +678,12 @@ $2 ~ /^319$/ {
 # NAMES
 #    $1   $2   $3    $4     $5      $6     $7     $8
 # :server 353 NICK [@*=] #channel :nick1 +nick2 @nick3
-$2 ~ /^353$/ {
+$2 == "353" {
 	channel = $5
 
 	# Clear old NAMES first
 	CHANNELS[channel] = 0
-	for (bangpath in NAMES) {
-		split(bangpath, path, SUBSEP)
-		if (path[1] == channel)
-			delete NAMES[bangpath]
-	}
+	empty_array(NAMES, channel)
 
 	s = ""
 	for (i = 6; i <= NF; i++) {
