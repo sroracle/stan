@@ -9,6 +9,7 @@ server="irc.example.net"
 port="6697"
 export STAN_CFG="stan.cfg"
 export STAN_AWK="stan.awk"
+export LC_ALL="C"
 
 if [ -z "$(command -v awk)" ]; then
 	echo "*** Missing required command: awk"
@@ -20,7 +21,7 @@ if [ -z "$(command -v socat)" ]; then
 	exit 1
 fi
 
-case "$(readlink "$(command -v awk)")" in
+case "$(readlink -f "$(command -v awk)")" in
 *mawk*)
 	interactive="-W interactive"
 	;;
@@ -30,5 +31,5 @@ export STAN_ARGV="awk $interactive -f $STAN_AWK"
 if [ "$1" = "-n" ]; then
 	exec socat EXEC:"$STAN_ARGV" STDIO
 else
-	exec socat EXEC:"$STAN_ARGV" "$transport:$server:$port"
+	exec socat EXEC:"$STAN_ARGV" "$transport:$server:$port",forever
 fi
