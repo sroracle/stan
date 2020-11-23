@@ -15,6 +15,8 @@ function load_config() {
 			BRAIN_FILE = $2
 		else if ($1 == "QUOTE_FILE")
 			QUOTE_FILE = $2
+		else if ($1 == "POLL_DIR")
+			POLL_DIR = $2
 		else if ($1 == "OWNERMASK")
 			OWNERMASK = $2
 		else if ($1 == "NICK")
@@ -480,6 +482,163 @@ function rand_quote(search,        argv, quote) {
 		say(channel, quote)
 }
 
+function vote_pre(channel, nick, cmd, cmdlen,        msg) {
+	if (!((channel, cmd[2]) in POLLS)) {
+		say(channel, "Poll does not exist")
+		return
+	}
+
+	if (cmdlen < 3) {
+		say(channel, "Please enter a choice")
+		return
+	}
+
+	CB_CHOICE = slice(cmd, 3, cmdlen)
+	if (((channel, cmd[2]) in POLL_CHOICES) && !((channel, cmd[2], CB_CHOICE) in POLL_CHOICES)) {
+		for (bangpath in POLL_CHOICES) {
+			split(bangpath, path, SUBSEP)
+			if (path[1] != channel || path[2] != cmd[2] || !path[3])
+				continue
+			msg = msg ", '" path[3] "'"
+		}
+		sub(/^, /, "", msg)
+		msg = "Please enter a valid choice: " msg
+		say(channel, msg)
+		CB_CHOICE = ""
+		return
+	}
+
+	CB_FUNCTION = "vote"
+	CB_CHANNEL = channel
+	CB_NICK = nick
+	CB_POLL = cmd[2]
+	irccmd("WHOIS", nick)
+}
+
+function vote_reset() {
+	CB_CHOICE = ""
+	CB_FUNCTION = ""
+	CB_CHANNEL = ""
+	CB_NICK = ""
+	CB_POLL = ""
+}
+
+function vote_post(channel, nick, account, poll, choice) {
+	if (!account) {
+		say(channel, nick ": Only registered users may vote.")
+		vote_reset()
+		return
+	}
+
+	# Already voted? Change your vote
+	if ((poll, account) in POLLS)
+		POLL_CHOICES[channel, poll, POLLS[channel, poll, account]] -= 1
+	else
+		POLLS[channel, poll] += 1
+	POLLS[channel, poll, account] = choice
+	POLL_CHOICES[channel, poll, choice] += 1
+	say(channel, nick ": Your vote has been counted, thank you.")
+
+	vote_reset()
+}
+
+function poll_start(channel, nick, cmd, cmdlen,        bangpath, path, i) {
+	if (channel !~ /^[#&]/) {
+		say(channel, "Polls can only be started in channels.")
+		return
+	}
+	if ((channel, cmd[3]) in POLLS) {
+		# Poll already in progress
+		poll_end(channel, "", cmd[3], 0)
+		return
+	}
+
+	say(channel, "Starting poll: " cmd[3])
+	if (cmdlen > 3) {
+		bangpath = slice(cmd, 4, cmdlen)
+		split(bangpath, path, /[ ]*,[ ]*/)
+		POLL_CHOICES[channel, cmd[3]] = 0
+		for (i in path)
+			POLL_CHOICES[channel, cmd[3], path[i]] = 0
+	}
+	POLLS[channel, cmd[3]] = 0
+	POLL_OWNERS[channel, cmd[3]] = nick
+}
+
+function poll_list(channel, all,        bangpath, path, msg) {
+	msg = ""
+	for (bangpath in POLLS) {
+		split(bangpath, path, SUBSEP)
+		if (!all && path[1] != channel)
+			continue
+		if (!path[2] || path[3])
+			continue
+		msg = msg ", "
+		if (all)
+			msg = msg path[1] "/"
+		msg = msg path[2] " (" POLLS[bangpath] " votes)"
+	}
+	sub(/^, /, "", msg)
+	if (msg)
+		say(channel, "Active polls: " msg)
+	else
+		say(channel, "No active polls on any channel")
+}
+
+function poll_end(channel, nick, poll, end,       bangpath, path, msg, file, url) {
+	if (nick && POLL_OWNERS[channel, poll] != nick) {
+		say(channel, "This poll is owned by " POLL_OWNERS[channel, poll])
+		return
+	}
+
+	if (end)
+		msg = "Poll ended. "
+	msg = msg "Total votes: " POLLS[channel, poll]
+
+	if (end) {
+		if (end >= 2)
+			file = POLL_DIR "/poll." systime()
+
+		delete POLLS[channel, poll]
+		for (bangpath in POLLS) {
+			split(bangpath, path, SUBSEP)
+			if (path[1] != channel || path[2] != poll || !path[3])
+				continue
+
+			if (end >= 2)
+				printf "%s\t%s\n", path[3], POLLS[bangpath] > file
+
+			delete POLLS[bangpath]
+		}
+
+		if (end >= 2)
+			close(file)
+		if (end == 3) {
+			file = "curl -F 'tpaste=<-' https://tpaste.us/ < " shell_quote(file)
+			file | getline url
+		}
+	}
+
+	for (bangpath in POLL_CHOICES) {
+		split(bangpath, path, SUBSEP)
+		if (path[1] != channel || path[2] != poll || !path[3])
+			continue
+		if (POLL_CHOICES[bangpath] > 0)
+			msg = msg "; '" path[3] "': " POLL_CHOICES[bangpath] " votes"
+
+		if (end)
+			delete POLL_CHOICES[bangpath]
+	}
+	say(channel, msg)
+	if (url)
+		say(channel, url)
+
+	if (end) {
+		delete POLL_CHOICES[channel, poll]
+		delete POLL_OWNERS[channel, poll]
+	}
+}
+
 function empty_array(array, key1,        bangpath, path) {
 	for (bangpath in array) {
 		split(bangpath, path, SUBSEP)
@@ -526,6 +685,17 @@ function admin(channel, nick, cmd, cmdlen) {
 
 	else if (cmd[1] == "say" && cmdlen > 2)
 		send("PRIVMSG " cmd[2] " :" slice(cmd, 3, cmdlen))
+
+	else if (cmd[1] == "poll") {
+		if (cmd[2] == "coup" && cmdlen == 3)
+			poll_end(channel, "", cmd[3], 1)
+		else if (cmd[2] == "listall")
+			poll_list(channel, 1)
+		else if (cmd[2] == "export" && cmdlen == 3)
+			poll_end(channel, "", cmd[3], 2)
+		else if (cmd[2] == "publish" && cmdlen == 3)
+			poll_end(channel, "", cmd[3], 3)
+	}
 }
 
 function user(channel, nick, cmd, cmdlen,        msg) {
@@ -598,6 +768,20 @@ function user(channel, nick, cmd, cmdlen,        msg) {
 		else
 			rand_quote()
 	}
+
+	else if (cmd[1] == "vote")
+		vote_pre(channel, nick, cmd, cmdlen)
+
+	else if (cmd[1] == "poll") {
+		if (cmd[2] == "list" || !cmd[2])
+			poll_list(channel, "")
+		else if (cmd[2] == "start" && cmdlen >= 3)
+			poll_start(channel, nick, cmd, cmdlen)
+		else if (cmd[2] == "status" && cmdlen == 3)
+			poll_end(channel, "", cmd[3], 0)
+		else if (cmd[2] == "end" && cmdlen == 3)
+			poll_end(channel, nick, cmd[3], 1)
+	}
 }
 
 BEGIN {
@@ -661,6 +845,17 @@ $2 ~ /^[459][0-9][0-9]/ {
 	record_once("<<< " $0)
 }
 
+# End of WHOIS
+#    $1   $2   $3   $4
+# :server 318 NICK nick :End of /WHOIS list.
+$2 == "318" {
+	# We've hit end of WHOIS without an account name being identified.
+	# Therefore CB_* have not yet been reset, so let's reset them now and
+	# let the user know.
+	if (CB_FUNCTION == "vote" && $4 == CB_NICK)
+		vote_post(CB_CHANNEL, CB_NICK, "", CB_POLL, CB_CHOICE)
+}
+
 # WHOIS
 #    $1   $2   $3   $4     $5      $6      $7
 # :server 319 NICK nick :#chan1 +#chan2 @#chan3
@@ -673,6 +868,14 @@ $2 == "319" {
 			irccmd("NAMES", channel)
 		}
 	}
+}
+
+# WHOIS
+#    $1   $2   $3   $4     $5
+# :server 330 NICK nick account :is logged in as
+$2 == "330" {
+	if (CB_FUNCTION == "vote" && $4 == CB_NICK)
+		vote_post(CB_CHANNEL, CB_NICK, $5, CB_POLL, CB_CHOICE)
 }
 
 # NAMES

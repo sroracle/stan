@@ -20,6 +20,24 @@ User commands
 ``%more``
   Continue speaking if the last message was too long.
 
+``%poll``
+  List currently active polls in the channel.
+
+``%poll list``
+  Synonym for ``%poll``.
+
+``%poll start poll_name [choice 1, choice 2, ...]``
+  Start a poll on the channel. If no choices are specified, then voters
+  can write-in anything. If choices are specified, voters can only cast
+  a ballot from that list.
+
+``%poll status poll_name``
+  Return current ballot tallies.
+
+``%poll end poll_name``
+  Stop the poll and tally the ballots. Only the user with the same
+  nickname as who started the poll may stop it.
+
 ``%rand [search terms]``
 	Searches the quote database case-insenitively using the given search
 	terms, or returns a completely random quote.
@@ -35,6 +53,11 @@ User commands
 
 ``%uptime``
 	Returns the output of ``uptime(1)``.
+
+``%vote poll_name choice``
+  Cast a vote in a channel poll. You can vote as many times as you like
+  new votes will replace old ones for each NickServ account. Users who
+  are not logged in may not vote.
 
 Administrative commands
 -----------------------
@@ -57,6 +80,20 @@ configuration option.
 
 ``%part #channel``
 	Leave the specified channel.
+
+``%poll coup poll_name``
+  Forcibly close a poll on the channel.
+
+``%poll export poll_name``
+  Save the ballots as a tab-separated local file of ``(account,
+  choice)`` pairs. See also the ``POLL_DIR`` configuration option.
+
+``%poll listall``
+  List active polls across all channels.
+
+``%poll publish poll_name``
+  Same as the above, but also post it to ``tpaste.us`` and send the URL
+  to the channel.
 
 ``%quiet``
 	Disables chat functionality on the given channel. See also the

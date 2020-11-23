@@ -2,6 +2,8 @@
 BRAIN_FILE=brain.db
 # File to load quotes from / save quotes to
 QUOTE_FILE=quotes.db
+# Directory to store exported/published poll data
+POLL_DIR=.
 # username@hostname or vhost of the bot's owner (allowed to run admin commands)
 OWNERMASK=owner@owner.host
 NICK=Stan
