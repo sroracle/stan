@@ -1,35 +1,19 @@
-#!/bin/sh
+#!/bin/sh -e
 # SPDX-License-Identifier: EFL-2.0
-# Copyright (c) 2019 Max Rees
+# Copyright (c) 2019-2020 Max Rees
 # See LICENSE for more information.
-#
-# OPENSSL or TCP
-transport="OPENSSL"
 server="irc.example.net"
 port="6697"
 export STAN_CFG="stan.cfg"
-export STAN_AWK="stan.awk"
+
 export LC_ALL="C"
-
-if [ -z "$(command -v awk)" ]; then
-	echo "*** Missing required command: awk"
-	exit 1
-fi
-
-if [ -z "$(command -v socat)" ]; then
-	echo "*** Missing required command: socat"
-	exit 1
-fi
-
-case "$(readlink -f "$(command -v awk)")" in
+awk="$(readlink -f "$(command -v awk)")"
+case "$awk" in
 *mawk*)
 	interactive="-W interactive"
 	;;
 esac
 
-export STAN_ARGV="awk $interactive -f $STAN_AWK"
-if [ "$1" = "-n" ]; then
-	exec socat EXEC:"$STAN_ARGV" STDIO
-else
-	exec socat EXEC:"$STAN_ARGV" "$transport:$server:$port",forever
-fi
+export CADIR=/etc/ssl/certs
+export STAN_ARGV="$awk $interactive -f stan.awk"
+exec s6-tlsclient -- "$server" "$port" fdmove 0 6 fdmove 1 7 $STAN_ARGV
