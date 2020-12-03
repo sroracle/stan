@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: EFL-2.0
-# Copyright (c) 2019 Max Rees
+# Copyright (c) 2019-2020 Max Rees
 # See LICENSE for more information.
 import collections # deque
 import random      # choice, randint

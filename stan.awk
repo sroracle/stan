@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EFL-2.0 AND GPL-3.0
-# Copyright (c) 2019 Max Rees
+# Copyright (c) 2019-2020 Max Rees
 # See LICENSE for more information.
 #
 # The shell_quote function was adapted from:
