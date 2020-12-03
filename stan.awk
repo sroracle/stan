@@ -989,6 +989,16 @@ $2 ~ /^(JOIN|PART|KICK|QUIT)$/ {
 	}
 }
 
+#            $2         $3           $4         $5
+# :irc.host BATCH +sxtUfAeXBgNoD chathistory [:]#channel
+$2 == "BATCH" {
+	sub(/^:/, "", $5)
+	if ($3 ~ "^[+]" && $4 == "chathistory")
+		IGNOREBAT[$5, substr($3, 2)] = 1
+	else if ($3 ~ "^-")
+		delete IGNOREBAT[$5, substr($3, 2)]
+}
+
 #       $1          $2       $3     $4
 # :nick!user@host PRIVMSG #channel :msg
 $2 ~ /^(PRIVMSG|NOTICE)$/ {
@@ -1012,6 +1022,15 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 			record_once(sprintf("~~~ %s %s", fmt, msg))
 			next
 		}
+
+	if ((channel, TAGS["batch"]) in IGNOREBAT) {
+		record_once(sprintf("~~~ %s %s", fmt, msg))
+		next
+	}
+
+	debug("!!! NF = " NF)
+	for (tag in TAGS)
+		debug("!!! @" tag "=" TAGS[tag])
 
 	if (nick in IGNORE || nick == NICK) {
 		record_once(sprintf("~~~ %s %s", fmt, msg))
