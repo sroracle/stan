@@ -809,8 +809,12 @@ BEGIN {
 	notice("****** STARTING CHILD #" CHILD " ******")
 	BIRTH = systime()
 	MARKOV_ARGV = "python3 markov.py " shell_quote(BRAIN_FILE)
-	set_nick(NICK)
 
+	if (CHILD == "1") {
+		irccmd("CAP", "REQ :account-tag batch chghost message-tags")
+		irccmd("CAP", "END")
+	}
+	set_nick(NICK)
 	if (CHILD == "1")
 		irccmd("USER", USERNAME " 8 * :" GECOS)
 
@@ -821,15 +825,50 @@ BEGIN {
 	}
 }
 
+function rm_field(field,        i) {
+	for (i = field; i <= NF; i++)
+		$(i) = $(i+1)
+	NF -= 1
+}
+
+function save_tags(        tags, tag, sep, value) {
+	delete TAGS
+	if (!("message-tags" in CAPS && $1 ~ "^@"))
+		return
+
+	$1 = substr($1, 2)
+	split($1, tags, ";")
+	for (tag in tags) {
+		tag = tags[tag]
+		sep = index(tag, "=")
+		if (sep) {
+			value = substr(tag, sep + 1)
+			tag = substr(tag, 1, sep - 1)
+		}
+		TAGS[tag] = value
+	}
+	delete tags
+	rm_field(1)
+}
+
 {
 	debug("<<< " $0)
 	# Normally we'd just add \r to RS, but mawk ignores RS with -W interactive
 	# so let's strip it out manually instead
 	sub(/\r$/, "")
+	save_tags()
 }
 
 /^PING :/ {
 	send("PONG " $2)
+}
+
+# :irc.host CAP * ACK [:]cap1 cap2
+$2 == "CAP" {
+	sub(/^:/, "", $5)
+	if ($3 == "*" && $4 == "ACK")
+		for (i = 5; i <= NF; i++)
+			CAPS[$(i)] = 1
 }
 
 # Welcome message - usually safe to join now
