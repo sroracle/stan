@@ -482,51 +482,40 @@ function rand_quote(search,        argv, quote) {
 		say(channel, quote)
 }
 
-function vote_pre(channel, nick, cmd, cmdlen,        msg) {
-	if (!((channel, cmd[2]) in POLLS)) {
+function vote(channel, nick, cmd, cmdlen,        poll, choice, account, msg, bangpath, path) {
+	poll = cmd[2]
+
+	if (!((channel, poll) in POLLS)) {
 		say(channel, "Poll does not exist")
 		return
 	}
-
 	if (cmdlen < 3) {
 		say(channel, "Please enter a choice")
 		return
 	}
+	if ("account-tag" in CAPS) {
+		if (TAGS["account"])
+			account = TAGS["account"]
+		else {
+			say(channel, nick ": Only registered users may vote.")
+			return
+		}
+	} else {
+		notice("Voting is per-nick...")
+		account = nick
+	}
 
-	CB_CHOICE = slice(cmd, 3, cmdlen)
-	if (((channel, cmd[2]) in POLL_CHOICES) && !((channel, cmd[2], CB_CHOICE) in POLL_CHOICES)) {
+	choice = slice(cmd, 3, cmdlen)
+	if (((channel, poll) in POLL_CHOICES) && !((channel, poll, choice) in POLL_CHOICES)) {
 		for (bangpath in POLL_CHOICES) {
 			split(bangpath, path, SUBSEP)
-			if (path[1] != channel || path[2] != cmd[2] || !path[3])
+			if (path[1] != channel || path[2] != poll || !path[3])
 				continue
 			msg = msg ", '" path[3] "'"
 		}
 		sub(/^, /, "", msg)
 		msg = "Please enter a valid choice: " msg
 		say(channel, msg)
-		CB_CHOICE = ""
-		return
-	}
-
-	CB_FUNCTION = "vote"
-	CB_CHANNEL = channel
-	CB_NICK = nick
-	CB_POLL = cmd[2]
-	irccmd("WHOIS", nick)
-}
-
-function vote_reset() {
-	CB_CHOICE = ""
-	CB_FUNCTION = ""
-	CB_CHANNEL = ""
-	CB_NICK = ""
-	CB_POLL = ""
-}
-
-function vote_post(channel, nick, account, poll, choice) {
-	if (!account) {
-		say(channel, nick ": Only registered users may vote.")
-		vote_reset()
 		return
 	}
 
@@ -538,8 +527,6 @@ function vote_post(channel, nick, account, poll, choice) {
 	POLLS[channel, poll, account] = choice
 	POLL_CHOICES[channel, poll, choice] += 1
 	say(channel, nick ": Your vote has been counted, thank you.")
-
-	vote_reset()
 }
 
 function poll_start(channel, nick, cmd, cmdlen,        bangpath, path, i) {
@@ -770,7 +757,7 @@ function user(channel, nick, cmd, cmdlen,        msg) {
 	}
 
 	else if (cmd[1] == "vote")
-		vote_pre(channel, nick, cmd, cmdlen)
+		vote(channel, nick, cmd, cmdlen)
 
 	else if (cmd[1] == "poll") {
 		if (cmd[2] == "list" || !cmd[2])
@@ -884,17 +871,6 @@ $2 ~ /^[459][0-9][0-9]/ {
 	record_once("<<< " $0)
 }
 
-# End of WHOIS
-#    $1   $2   $3   $4
-# :server 318 NICK nick :End of /WHOIS list.
-$2 == "318" {
-	# We've hit end of WHOIS without an account name being identified.
-	# Therefore CB_* have not yet been reset, so let's reset them now and
-	# let the user know.
-	if (CB_FUNCTION == "vote" && $4 == CB_NICK)
-		vote_post(CB_CHANNEL, CB_NICK, "", CB_POLL, CB_CHOICE)
-}
-
 # WHOIS
 #    $1   $2   $3   $4     $5      $6      $7
 # :server 319 NICK nick :#chan1 +#chan2 @#chan3
@@ -907,14 +883,6 @@ $2 == "319" {
 			irccmd("NAMES", channel)
 		}
 	}
-}
-
-# WHOIS
-#    $1   $2   $3   $4     $5
-# :server 330 NICK nick account :is logged in as
-$2 == "330" {
-	if (CB_FUNCTION == "vote" && $4 == CB_NICK)
-		vote_post(CB_CHANNEL, CB_NICK, $5, CB_POLL, CB_CHOICE)
 }
 
 # NAMES
