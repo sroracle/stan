@@ -197,7 +197,7 @@ function randnick(channel,        i, j) {
 }
 
 function markov(trigger, channel, msg) {
-	debug(trigger " " channel " " msg)
+	debug("--- (" trigger "/" channel ") " msg)
 	printf "%d %s %s\n", trigger, channel, msg | MARKOV_ARGV
 	fflush(MARKOV_ARGV)
 }
