@@ -582,7 +582,7 @@ function poll_list(channel, all,        bangpath, path, msg) {
 	if (msg)
 		say(channel, "Active polls: " msg)
 	else
-		say(channel, "No active polls on any channel")
+		say(channel, "No active polls")
 }
 
 function poll_end(channel, nick, poll, end,       bangpath, path, msg, file, url) {
