@@ -531,7 +531,7 @@ function vote_post(channel, nick, account, poll, choice) {
 	}
 
 	# Already voted? Change your vote
-	if ((poll, account) in POLLS)
+	if ((channel, poll, account) in POLLS)
 		POLL_CHOICES[channel, poll, POLLS[channel, poll, account]] -= 1
 	else
 		POLLS[channel, poll] += 1
