@@ -930,6 +930,13 @@ $2 ~ /^(JOIN|PART|KICK|QUIT)$/ {
 		next
 	channel = $3
 
+	if (nick == "joe") {
+		if (channel == "#Sporks" && $2 == "JOIN")
+			say("#Sporks", "boj")
+		else if ($2 == "QUIT" && ("#Sporks", "joe") in NAMES)
+			say("#Sporks", "eoj")
+	}
+
 	if ($2 == "JOIN") {
 		CHANNELS[channel] += 1
 		NAMES[channel, nick] = 1
