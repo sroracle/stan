@@ -838,6 +838,34 @@ function save_tags(        tags, tag, sep, value) {
 	rm_field(1)
 }
 
+function save_isupport(        token, sep, value) {
+	for (i = 4; i <= NF; i++) {
+		token = $(i)
+		if (!token)
+			continue
+		sep = index(token, "=")
+		if (sep) {
+			value = substr(token, sep + 1)
+			token = substr(token, 1, sep - 1)
+		}
+		if (token ~ "^-") {
+			sub(/^-/, "", token)
+			delete ISUPPORT[token]
+			if (token == "PREFIX")
+				PREFIX = ""
+			continue
+		}
+
+		if (token == "PREFIX") {
+			PREFIX = value
+			sub(/^[(][^)]+[)]/, "", PREFIX)
+			debug("PREFIX="PREFIX)
+		}
+		ISUPPORT[token] = value
+		debug("ISUPPORT "token"="value"")
+	}
+}
+
 {
 	debug("<<< " $0)
 	# Normally we'd just add \r to RS, but mawk ignores RS with -W interactive
@@ -867,6 +895,17 @@ $2 == "001" {
 		irccmd("JOIN", channel)
 }
 
+# ISUPPORT
+#                      $4
+# :server 005 NICK TOKEN=VALUE TOKEN2 -TOKEN3 ... :are supported by this server
+# PREFIX=(qaohv)~&@%+
+$2 == "005" {
+	if ($0 !~ /:are supported by this server$/)
+		next
+	sub(/:are supported by this server$/, "")
+	save_isupport()
+}
+
 # Display errors from the server (4xx, 5xx, and sometimes 9xx numerics)
 $2 ~ /^[459][0-9][0-9]/ {
 	record_once("<<< " $0)
@@ -880,7 +919,7 @@ $2 == "319" {
 		sub(/^:/, "", $5)
 		for (i = 5; i <= NF; i++) {
 			channel = $(i)
-			sub(/[+@]+/, "", channel) # FIXME
+			sub("^["PREFIX"]+", "", channel)
 			CHANNELS[channel] = 0
 			irccmd("NAMES", channel)
 		}
@@ -901,7 +940,7 @@ $2 == "353" {
 	sub(/^:/, "", $6)
 	for (i = 6; i <= NF; i++) {
 		nick = $(i)
-		sub(/[+@]+/, "", nick) # FIXME
+		sub("^["PREFIX"]+", "", nick)
 		s = s " " nick
 		if (!((channel, nick) in NAMES)) {
 			CHANNELS[channel] += 1
