@@ -635,9 +635,17 @@ function empty_array(array, key1,        bangpath, path) {
 	}
 }
 
+function sync() {
+	delete ISUPPORT
+	delete CHANNELS
+	delete NAMES
+	irccmd("VERSION")
+	irccmd("WHOIS", NICK)
+}
+
 function admin(channel, nick, cmd, cmdlen) {
 	if (cmd[1] == "sync")
-		irccmd("WHOIS", NICK)
+		sync()
 
 	else if (cmd[1] == "identify")
 		identify()
@@ -803,13 +811,9 @@ BEGIN {
 	}
 	set_nick(NICK)
 	if (CHILD == "1")
-		irccmd("USER", USERNAME " 8 * :" GECOS)
-
-	else {
-		delete CHANNELS
-		delete NAMES
-		irccmd("WHOIS", NICK)
-	}
+		irccmd("USER", USERNAME " * * :" GECOS)
+	else
+		sync()
 }
 
 function rm_field(field,        i) {
