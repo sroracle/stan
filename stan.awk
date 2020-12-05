@@ -185,13 +185,13 @@ function age(        delta, days, hours, mins, secs) {
 	return sprintf("%s%02d:%02d:%02d", days, hours, mins, secs)
 }
 
-function randnick(channel,        i, j) {
+function randnick(channel,        i, j, bangpath, path) {
 	j = randrange(1, CHANNELS[channel])
 	i = 0
 	for (bangpath in NAMES) {
 		i++
 		split(bangpath, path, SUBSEP)
-		if (i == j)
+		if (path[1] == channel && i == j)
 			return path[2]
 	}
 }
