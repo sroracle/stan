@@ -636,9 +636,11 @@ function empty_array(array, key1,        bangpath, path) {
 }
 
 function sync() {
+	delete CAPS
 	delete ISUPPORT
 	delete CHANNELS
 	delete NAMES
+	irccmd("CAP", "LIST")
 	irccmd("VERSION")
 	irccmd("WHOIS", NICK)
 }
@@ -886,10 +888,11 @@ function save_isupport(        token, sep, value) {
 }
 
 #                     $5
-# :server CAP * ACK :cap1 cap2
+# :server CAP * ACK  :cap1 cap2
+# :server CAP * LIST :cap1 cap2
 $2 == "CAP" {
 	sub(/^:/, "", $5)
-	if ($3 == "*" && $4 == "ACK")
+	if ($4 == "ACK" || $4 == "LIST")
 		for (i = 5; i <= NF; i++)
 			CAPS[$(i)] = 1
 }
