@@ -865,6 +865,9 @@ function save_isupport(        token, sep, value) {
 			sub(/^[(][^)]+[)]/, "", PREFIX)
 			debug("PREFIX="PREFIX)
 		}
+		if (token == "BOT")
+			irccmd("MODE", NICK" +"value)
+
 		ISUPPORT[token] = value
 		debug("ISUPPORT "token"="value"")
 	}
