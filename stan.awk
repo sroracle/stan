@@ -911,7 +911,7 @@ $2 == "353" {
 
 # JOIN
 #       $1         $2     $3
-# :nick!user@host JOIN #channel
+# :nick!user@host JOIN :#channel
 # PART
 #       $1         $2     $3
 # :nick!user@host PART #channel :msg
@@ -929,6 +929,9 @@ $2 ~ /^(JOIN|PART|KICK|QUIT)$/ {
 	if (nick == NICK)
 		next
 	channel = $3
+
+	if ($2 == "JOIN")
+		sub(/^:/, "", channel)
 
 	if (nick == "joe") {
 		if (channel == "#Sporks" && $2 == "JOIN")
