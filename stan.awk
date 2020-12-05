@@ -846,11 +846,12 @@ function save_tags(        tags, tag, sep, value) {
 	save_tags()
 }
 
-/^PING :/ {
+/^PING / {
 	send("PONG " $2)
 }
 
-# :irc.host CAP * ACK [:]cap1 cap2
+#                     $5
+# :server CAP * ACK :cap1 cap2
 $2 == "CAP" {
 	sub(/^:/, "", $5)
 	if ($3 == "*" && $4 == "ACK")
@@ -876,9 +877,10 @@ $2 ~ /^[459][0-9][0-9]/ {
 # :server 319 NICK nick :#chan1 +#chan2 @#chan3
 $2 == "319" {
 	if ($4 == NICK) {
+		sub(/^:/, "", $5)
 		for (i = 5; i <= NF; i++) {
 			channel = $(i)
-			sub(/[:+@]+/, "", channel)
+			sub(/[+@]+/, "", channel) # FIXME
 			CHANNELS[channel] = 0
 			irccmd("NAMES", channel)
 		}
@@ -896,9 +898,10 @@ $2 == "353" {
 	empty_array(NAMES, channel)
 
 	s = ""
+	sub(/^:/, "", $6)
 	for (i = 6; i <= NF; i++) {
 		nick = $(i)
-		sub(/[:+@]+/, "", nick)
+		sub(/[+@]+/, "", nick) # FIXME
 		s = s " " nick
 		if (!((channel, nick) in NAMES)) {
 			CHANNELS[channel] += 1
@@ -968,7 +971,7 @@ $2 ~ /^(JOIN|PART|KICK|QUIT)$/ {
 }
 
 #            $2         $3           $4         $5
-# :irc.host BATCH +sxtUfAeXBgNoD chathistory [:]#channel
+# :server BATCH +sxtUfAeXBgNoD chathistory :#channel
 $2 == "BATCH" {
 	sub(/^:/, "", $5)
 	if ($3 ~ "^[+]" && $4 == "chathistory")
@@ -986,7 +989,8 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 	nick = substr($1, 2, bang - 2)
 	hostmask = substr($1, bang + 1)
 	channel = $3
-	msgstart = length($1 " " $2 " " $3 " :") + 1
+	sub(/^:/, "", $4)
+	msgstart = length($1 " " $2 " " $3 " ") + 1
 	msg = substr($0, msgstart)
 
 	if (channel == NICK) {
