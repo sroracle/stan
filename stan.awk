@@ -942,10 +942,6 @@ $2 == "319" {
 $2 == "353" {
 	channel = $5
 
-	# Clear old NAMES first
-	CHANNELS[channel] = 0
-	empty_array(NAMES, channel)
-
 	s = ""
 	sub(/^:/, "", $6)
 	for (i = 6; i <= NF; i++) {
