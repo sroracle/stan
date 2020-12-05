@@ -674,6 +674,7 @@ function admin(channel, nick, cmd, cmdlen) {
 
 	else if (cmd[1] == "part" && cmdlen == 2) {
 		delete CHANNELS[cmd[2]]
+		empty_array(NAMES, cmd[2])
 		irccmd("PART", cmd[2] " :See ya later")
 	}
 
