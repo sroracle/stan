@@ -23,8 +23,8 @@ function load_config() {
 			NICK = $2
 		else if ($1 == "USERNAME")
 			USERNAME = $2
-		else if ($1 == "NS_PASSWORD")
-			NS_PASSWORD = $2
+		else if ($1 == "PASSWORD")
+			PASSWORD = $2
 		else if ($1 == "GECOS")
 			GECOS = $2
 		else if ($1 == "CMD_PATTERN")
@@ -163,8 +163,11 @@ function set_nick(nick) {
 }
 
 function identify() {
-	if (NS_PASSWORD != "")
-		send("PRIVMSG NickServ :identify " NICK " " NS_PASSWORD)
+	if (!PASSWORD)
+		return
+	record("*** PRIVMSG NickServ :identify "NICK" *******")
+	print "PRIVMSG NickServ :identify "NICK" "PASSWORD
+	fflush()
 }
 
 function age(        delta, days, hours, mins, secs) {
@@ -640,6 +643,7 @@ function sync() {
 	delete ISUPPORT
 	delete CHANNELS
 	delete NAMES
+	identify()
 	irccmd("CAP", "LIST")
 	irccmd("VERSION")
 	irccmd("WHOIS", NICK)
@@ -811,6 +815,11 @@ BEGIN {
 	if (CHILD == "1") {
 		irccmd("CAP", "REQ :account-tag batch chghost message-tags")
 		irccmd("CAP", "END")
+		if (PASSWORD) {
+			record("*** PASS *******")
+			print "PASS "PASSWORD
+			fflush()
+		}
 	}
 	set_nick(NICK)
 	if (CHILD == "1")
@@ -901,7 +910,6 @@ $2 == "CAP" {
 # Welcome message - usually safe to join now
 $2 == "001" {
 	notice("Connected!")
-	identify()
 	for (channel in CHANNELS)
 		irccmd("JOIN", channel)
 }

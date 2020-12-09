@@ -9,8 +9,8 @@ OWNERMASK=owner@owner.host
 NICK=Stan
 # The bit before the hostname/vhost
 USERNAME=stan
-# Password for NickServ
-NS_PASSWORD=
+# Server password (assumed to be used with NickServ also)
+PASSWORD=
 # Also known as the real name field
 GECOS=Stanley Kudzu
 # ERE for commands - usually should start with ^ to match beginning-of-line
