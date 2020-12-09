@@ -983,10 +983,10 @@ $2 ~ /^(JOIN|PART|KICK|QUIT)$/ {
 		sub(/^:/, "", channel)
 
 	if (nick == "joe") {
-		if (channel == "#Sporks" && $2 == "JOIN")
-			say("#Sporks", "boj")
-		else if ($2 == "QUIT" && ("#Sporks", "joe") in NAMES)
-			say("#Sporks", "eoj")
+		if (channel == "#sporks" && $2 == "JOIN")
+			say("#sporks", "boj")
+		else if ($2 == "QUIT" && ("#sporks", "joe") in NAMES)
+			say("#sporks", "eoj")
 	}
 
 	if ($2 == "JOIN") {
