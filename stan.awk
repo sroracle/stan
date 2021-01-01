@@ -31,6 +31,8 @@ function load_config() {
 			CMD_PATTERN = $2
 		else if ($1 == "CHANNELS")
 			CHANNELS[$2] = 0
+		else if ($1 == "BATTLE_CHANS")
+			BATTLE_CHANS[$2] = 0
 		else if ($1 == "CHAT_CHANS")
 			CHAT_CHANS[$2] = 0
 		else if ($1 == "LEARN_CHANS")
@@ -199,8 +201,21 @@ function randnick(channel,        i, j, bangpath, path) {
 	}
 }
 
+function battle(channel, nick, msg,        bangpath, path, members) {
+	for (bangpath in NAMES) {
+		split(bangpath, path, SUBSEP)
+		if (path[1] != channel || !path[2])
+			continue
+		members = members "," path[2]
+	}
+	sub(/^,/, "", members)
+	debug("--- battle: (" channel "/" members "/" nick ") " msg)
+	printf "%s %s %s %s\n", channel, members, nick, msg | BATTLE_ARGV
+	fflush(BATTLE_ARGV)
+}
+
 function markov(trigger, channel, msg) {
-	debug("--- (" trigger "/" channel ") " msg)
+	debug("--- markov: (" trigger "/" channel ") " msg)
 	printf "%d %s %s\n", trigger, channel, msg | MARKOV_ARGV
 	fflush(MARKOV_ARGV)
 }
@@ -810,6 +825,7 @@ BEGIN {
 
 	notice("****** STARTING CHILD #" CHILD " ******")
 	BIRTH = systime()
+	BATTLE_ARGV = "php modules/battlebot.php"
 	MARKOV_ARGV = "python3 markov.py " shell_quote(BRAIN_FILE)
 
 	if (CHILD == "1") {
@@ -1090,6 +1106,9 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 			say($6, "Sorry, you stopped existing a few minutes ago. Please sit down and be quiet until you are woven into the pattern again.")
 	}
 
+	else if (channel in BATTLE_CHANS && msg ~ "^\001ACTION (attacks|stabs|fites|throws|drops|thwacks|casts|heals)")
+		battle(channel, nick, msg)
+
 	else {
 		QUOTES[channel] = "<" nick "> " msg
 		QUOTES[channel, nick] = "<" nick "> " msg
@@ -1103,5 +1122,6 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 }
 
 END {
+	close(BATTLE_ARGV)
 	close(MARKOV_ARGV)
 }
