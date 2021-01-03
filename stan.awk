@@ -802,6 +802,10 @@ function user(channel, nick, cmd, cmdlen,        msg) {
 }
 
 BEGIN {
+	# Since \n can't appear in IRC messages except to delimit
+	# end-of-message, this is a safer choice - many array indices
+	# are from untrusted IRC input...
+	SUBSEP = "\n"
 	load_config()
 	srand()
 	RS = "\n"
