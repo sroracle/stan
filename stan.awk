@@ -1069,12 +1069,6 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 	} else
 		fmt = "(" channel ") <" nick ">"
 
-	for (pattern in IGNOREPAT)
-		if (msg ~ pattern) {
-			record_once(sprintf("~~~ %s %s", fmt, msg))
-			next
-		}
-
 	if ((channel, TAGS["batch"]) in IGNOREBAT) {
 		record_once(sprintf("~~~ %s %s", fmt, msg))
 		next
@@ -1084,11 +1078,22 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 	for (tag in TAGS)
 		debug("!!! @" tag "=" TAGS[tag])
 
+	if (channel ~ /^[#&]/ && msg !~ CMD_PATTERN) {
+		QUOTES[channel] = "<" nick "> " msg
+		QUOTES[channel, nick] = "<" nick "> " msg
+	}
+
 	if (nick in IGNORE || nick == NICK) {
 		record_once(sprintf("~~~ %s %s", fmt, msg))
 		next
 	} else
 		record_once(sprintf("<<< %s %s", fmt, msg))
+
+	for (pattern in IGNOREPAT)
+		if (msg ~ pattern) {
+			record_once(sprintf("~~~ %s %s", fmt, msg))
+			next
+		}
 
 	if (msg ~ CMD_PATTERN) {
 		sub(CMD_PATTERN, "", msg)
@@ -1110,9 +1115,6 @@ $2 ~ /^(PRIVMSG|NOTICE)$/ {
 		battle(channel, nick, msg)
 
 	else {
-		QUOTES[channel] = "<" nick "> " msg
-		QUOTES[channel, nick] = "<" nick "> " msg
-
 		if (nick == UNO_MASTER)
 			uno(channel, msg)
 
