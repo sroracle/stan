@@ -1,15 +1,5 @@
 <?php
 
-function getPlayerId($haystack, $needle) {
-	$i = 0;
-	foreach($haystack as $playerarray) {
-		if($playerarray["name"] == $needle) {
-			return $i;
-		}
-		$i++;
-	}
-}
-
 class bdBattle {
     var $players = array();
     var $playersnames = array(); // i'm bad
@@ -25,18 +15,7 @@ class bdBattle {
         } else {
             $this->players[] = array("name" => $player, "health" => 10000);
             $this->playersnames[] = $player;
-            //$this->playersalive++;
             return true;
-        }
-    }
-
-    function getPlayersString() {
-        /* Returns a string of all players currently in the game, joined by , */
-        if (!empty($this->players)) {
-            $players = implode(", ", $this->playersnames);
-            return $players;
-        } else {
-            return false;
         }
     }
 
@@ -46,19 +25,6 @@ class bdBattle {
             return false;
         } else {
             return true;
-        }
-    }
-
-    function getPlayerHealth($player) {
-        /* Returns the current health of a player
-         *
-         * $player - player to get the health of
-         */
-        if (!$this->checkPlayerInGame($player)) {
-            return false;
-        } else {
-            $id = $this->getPlayerId($this->players, $player);
-            return $this->players[$id]["health"];
         }
     }
 
@@ -107,12 +73,6 @@ class bdBattle {
             }
             $i++;
         }
-    }
-
-    function getNumPlayers() {
-        /* Returns number of players in the game */
-
-        return count($this->playersnames);
     }
 
     function getCleanWepName($weapon) {
@@ -239,13 +199,11 @@ class bdBattle {
         if (!$this->checkPlayerInGame($attacker)) {
             // attacker isn't in game, add them
             $this->addPlayer($attacker);
-            //echo "added attacker {$attacker} to game - {$this->getPlayersString()}\n";
         }
 
         if (!$this->checkPlayerInGame($victim)) {
             // victim isn't in game, add them
             $this->addPlayer($victim);
-            //echo "added victim {$victim} to game - {$this->getPlayersString()}\n";
         }
 
         $weapon = $this->getCleanWepName($weapon);
@@ -293,7 +251,6 @@ class bdBattle {
         $result["hp"] = $attackedhp;
         $result["wep"] = $weapon;
 
-        //print_r($result);
         return $result;
     }
 
@@ -363,13 +320,11 @@ class bdBattle {
         if (!$this->checkPlayerInGame($patient)) {
             // attacker isn't in game, add them
             $this->addPlayer($patient);
-            //echo "added patient {$patient} to game - {$this->getPlayersString()}\n";
         }
 
         if (!$this->checkPlayerInGame($healer)) {
             // victim isn't in game, add them
             $this->addPlayer($healer);
-            //echo "added healer {$healer} to game - {$this->getPlayersString()}\n";
         }
 
         $tool = $this->getCleanToolName($tool);
@@ -408,49 +363,17 @@ class bdBattle {
         $result["hp"] = $newhp;
         $result["tool"] = $tool;
 
-        //print_r($result);
         return $result;
     }
 
-    function they_now_gen($gender, $type) {
-        /* $type = 1 - "He now has", "She now has", "They now have"
-         * $type = 2 - "he has been", "she has been", "they have been" */
-
-        if ($type == 1) {
-            if ($gender == "m") {
-                return "He now has";
-            } elseif ($gender == "f") {
-                return "She now has";
-            } else {
-                return "They now have";
-            }
-        } elseif ($type == 2) {
-            if ($gender == "m") {
-                return "he has";
-            } elseif ($gender == "f") {
-                return "she has";
-            } else {
-                return "they have";
-            }
-        } elseif ($type == 3) {
-            if ($gender == "m") {
-                return "he";
-            } elseif ($gender == "f") {
-                return "she";
-            } else {
-                return "they";
-            }
-        }
-    }
-
-    function getPlayerGender($player) {
-            // player isn't in db
-            return "o"; // unspecified gender
-    }
-
     function they_now($player, $type) {
-        $gender = $this->getPlayerGender($player);
-        return $this->they_now_gen($gender, $type);
+        if ($type == 1) {
+            return "They now have";
+        } elseif ($type == 2) {
+            return "they have";
+        } elseif ($type == 3) {
+            return "they";
+        }
     }
 
 }
@@ -574,7 +497,6 @@ function doActionStuff($bat, $chan, $members, $nick, $msg) {
 						if (!$bat->checkPlayerInGame($weaponiseduser)) {
 							// attacker isn't in game, add them
 							$bat->addPlayer($weaponiseduser);
-							//echo "added weaponised user {$weaponiseduser} to game - {$bat->getPlayersString()}\n";
 						}
 						$wuhp = $bat->damagePlayer($weaponiseduser, $result['dmg']);
 					} else { $userweaponised = false; }
