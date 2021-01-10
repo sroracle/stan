@@ -34,6 +34,10 @@ irc_admin && irc_msg ~ CMD_PATTERN"quit$" {
 }
 
 irc_admin && irc_msg ~ CMD_PATTERN"restart$" {
+	if (system("./stan.sh -W dump >/dev/null")) {
+		irc_say(irc_channel, "Compilation failed; refusing to restart.")
+		next
+	}
 	irc_say(irc_channel, "Killing child #" CHILD)
 	log_warning("****** STOPPING CHILD #" CHILD " ******")
 	exit 69
