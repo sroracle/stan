@@ -23,7 +23,7 @@ function chat(channel, msg) {
 }
 
 BEGIN {
-	CHAT_CMD = "python3 markov.py " util_shell_quote(CHAT_FILE)
+	CHAT_CMD = "python3 modules/markov.py " util_shell_quote(CHAT_FILE)
 }
 
 irc_admin && irc_msg ~ CMD_PATTERN"chat$" {
