@@ -1,6 +1,6 @@
 #!/bin/sh -e
 # SPDX-License-Identifier: EFL-2.0
-# Copyright (c) 2019-2020 Max Rees
+# Copyright (c) 2019-2021 Max Rees
 # See LICENSE for more information.
 server="irc.example.net"
 port="6697"
@@ -14,6 +14,36 @@ case "$awk" in
 	;;
 esac
 
+cat \
+	stan/log.awk \
+	stan/util.awk \
+	stan/config.awk \
+	stan/main.awk \
+	stan/irc.awk \
+> stan.awk
+
+cat \
+	modules/quotes.awk \
+	modules/ignore.awk \
+	modules/admin.awk \
+	modules/balefire.awk \
+	modules/cocain.awk \
+	modules/h.awk \
+	modules/joe.awk \
+	modules/nsa.awk \
+	modules/police.awk \
+	modules/poll.awk \
+	modules/status.awk \
+	modules/uno.awk \
+	modules/uptime.awk \
+	modules/battle.awk \
+	modules/chat.awk \
+>> stan.awk
+
 export CADIR=/etc/ssl/certs
 export STAN_ARGV="$awk $interactive -f stan.awk"
-exec s6-tlsclient -- "$server" "$port" fdmove 0 6 fdmove 1 7 $STAN_ARGV
+if [ -z "$*" ]; then
+	exec s6-tlsclient -- "$server" "$port" fdmove 0 6 fdmove 1 7 $STAN_ARGV
+else
+	exec $STAN_ARGV "$@"
+fi
