@@ -1,4 +1,11 @@
 <?php
+# SPDX-License-Identifier: EFL-2.0 AND BSD-3-Clause
+# Copyright (c) 2021 Max Rees
+# See LICENSE for more information.
+#
+# Adapted from Eren Zie's "fishbot", presumably under the 3-clause BSD
+# License as that is the license of its successor supybot plugin.
+# See LICENSE.BSD3 for more information.
 
 class bdBattle {
     var $players = array();
