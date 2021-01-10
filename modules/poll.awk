@@ -171,7 +171,7 @@ irc_msg ~ CMD_PATTERN"vote " {
 	next
 }
 
-irc_msg ~ CMD_PATTERN"poll(| list)$" {
+irc_msg ~ CMD_PATTERN"poll($| list$)" {
 	poll_list(irc_channel, "")
 	next
 }
