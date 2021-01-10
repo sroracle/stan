@@ -328,15 +328,15 @@ $2 == "PRIVMSG" {
 
 	for (_irc_pattern in IGNORE_PATTERN)
 		if (irc_msg ~ _irc_pattern) {
-			log_ndebug(sprintf("~~~ %s %s", fmt, irc_msg))
+			log_ndebug(sprintf("~~~ %s %s", _irc_fmt, irc_msg))
 			irc_ignore = 1
 		}
 
 	if (irc_nick in IGNORE || irc_nick == IRC_NICK) {
-		log_ndebug(sprintf("~~~ %s %s", fmt, irc_msg))
+		log_ndebug(sprintf("~~~ %s %s", _irc_fmt, irc_msg))
 		irc_ignore = 1
 	} else if (!irc_ignore)
-		log_ndebug(sprintf("<<< %s %s", fmt, irc_msg))
+		log_ndebug(sprintf("<<< %s %s", _irc_fmt, irc_msg))
 
 	if (irc_hostmask == OWNERMASK)
 		irc_admin = 1
