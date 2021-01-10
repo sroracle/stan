@@ -177,6 +177,8 @@ class bdBattle {
             case "zirself":
             case "hirself":
             case "theirself":
+            case "themself":
+            case "themselves":
             case "self":
                 return true;
 
