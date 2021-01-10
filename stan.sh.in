@@ -6,14 +6,6 @@ server="irc.example.net"
 port="6697"
 export STAN_CFG="stan.cfg"
 
-export LC_ALL="C"
-awk="$(readlink -f "$(command -v awk)")"
-case "$awk" in
-*mawk*)
-	interactive="-W interactive"
-	;;
-esac
-
 cat \
 	stan/log.awk \
 	stan/util.awk \
@@ -40,10 +32,16 @@ cat \
 	modules/chat.awk \
 >> stan.awk
 
+export LC_ALL="C"
 export CADIR=/etc/ssl/certs
-export STAN_ARGV="$awk $interactive -f stan.awk"
+awk="$(readlink -f "$(command -v awk)")"
+case "$awk" in
+*mawk*) interactive="-W interactive";;
+esac
+stan_argv="$awk $interactive -f stan.awk"
+
 if [ -z "$*" ]; then
-	exec s6-tlsclient -- "$server" "$port" fdmove 0 6 fdmove 1 7 $STAN_ARGV
+	exec s6-tlsclient -- "$server" "$port" fdmove 0 6 fdmove 1 7 $stan_argv
 else
-	exec $STAN_ARGV "$@"
+	exec $stan_argv "$@"
 fi
