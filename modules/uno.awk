@@ -38,10 +38,10 @@ function uno_decide_play(new_card,        play) {
 		UNO_CARDS[1] = new_card
 	}
 
-	if (UNO_DISCARD == "Wild +4" && PLUS_TARGET) {
+	if (UNO_DISCARD == "Wild +4" && UNO_PLUS_TARGET) {
 		play = uno_has_card("Wild +4", "", "")
 	}
-	else if (UNO_D_NUMBER == "+2" && PLUS_TARGET) {
+	else if (UNO_D_NUMBER == "+2" && UNO_PLUS_TARGET) {
 		play = uno_has_card("", "", "+2")
 		if (!play)
 			play = uno_has_card(UNO_D_COLOR " Reverse")
@@ -135,7 +135,7 @@ function uno(msg,        card, discard_v, play) {
 		return
 
 	else if (msg ~ /^next player must respond correctly/)
-		PLUS_TARGET = 1
+		UNO_PLUS_TARGET = 1
 
 	else if (msg ~ /^You picked/) {
 		sub(/^You picked/, "", msg)
@@ -159,7 +159,7 @@ function uno(msg,        card, discard_v, play) {
 		gsub(/[0-9][0-9],[0-9][0-9][ ]*/, "", msg)
 		gsub(/[ ]+/, " ", msg)
 
-		if (PLUS_TARGET)
+		if (UNO_PLUS_TARGET)
 			UNO_NEXT_COLOR = msg
 		else {
 			UNO_DISCARD = msg " *"
@@ -173,7 +173,7 @@ function uno(msg,        card, discard_v, play) {
 	}
 
 	else if (msg ~ /has to pick/ || msg ~ /must pick/) {
-		PLUS_TARGET = ""
+		UNO_PLUS_TARGET = ""
 		if (UNO_NEXT_COLOR) {
 			UNO_DISCARD = UNO_NEXT_COLOR " *"
 			UNO_D_COLOR = UNO_NEXT_COLOR
@@ -206,12 +206,12 @@ function uno(msg,        card, discard_v, play) {
 		# Wild +4 with color
 		if (UNO_D_COLOR == "Wild" && UNO_D_NUMBER == "+4")
 			UNO_DISCARD = "Wild +4"
-		if (discard_v[3] && !PLUS_TARGET) {
+		if (discard_v[3] && !UNO_PLUS_TARGET) {
 			UNO_DISCARD = discard_v[3] " *"
 			UNO_D_COLOR = discard_v[3]
 			UNO_D_NUMBER = ""
 		}
-		else if (discard_v[4] && !PLUS_TARGET) {
+		else if (discard_v[4] && !UNO_PLUS_TARGET) {
 			UNO_DISCARD = discard_v[4] " *"
 			UNO_D_COLOR = discard_v[4]
 			UNO_D_NUMBER = ""
@@ -235,7 +235,7 @@ irc_msg ~ CMD_PATTERN"uno( |$)" {
 	next
 }
 
-irc_channel == UNO_CHAN && irc_nick == UNO_MASTER && irc_msg {
+(irc_channel == UNO_CHAN || irc_channel == UNO_MASTER) && irc_nick == UNO_MASTER && irc_msg {
 	uno(irc_msg)
 	next
 }

@@ -298,7 +298,7 @@ $2 ~ /^(JOIN|PART|KICK|QUIT)$/ {
 
 #       $1          $2       $3     $4
 # :nick!user@host PRIVMSG #channel :msg
-$2 == "PRIVMSG" {
+$2 ~ "^(PRIVMSG|NOTICE)$" {
 	_irc_bang = index($1, "!")
 	if (!_irc_bang)
 		next
