@@ -2,7 +2,7 @@
 # Copyright (c) 2019-2021 Max Rees
 # See LICENSE for more information.
 
-irc_msg ~ /^[ ]*h[ ]*$/ {
+irc_msgv_len == 1 && irc_msgv[1] == "h" {
 	irc_say("h")
 	next
 }
