@@ -2,114 +2,114 @@
 # Copyright (c) 2019-2021 Max Rees
 # See LICENSE for more information.
 
-function poll_vote(channel, nick, cmd, cmdlen,        poll, choice, account, msg, bangpath, path) {
-	poll = cmd[2]
+function poll_vote(        poll, choice, account, msg, bangpath, path) {
+	poll = irc_msgv[2]
 
-	if (!((channel, poll) in POLLS)) {
-		irc_say(channel, "Poll does not exist")
+	if (!((irc_channel, poll) in POLLS)) {
+		irc_say(irc_channel, "Poll does not exist")
 		return
 	}
-	if (cmdlen < 3) {
-		irc_say(channel, "Please enter a choice")
+	if (irc_msgv_len < 3) {
+		irc_say(irc_channel, "Please enter a choice")
 		return
 	}
 	if ("account-tag" in IRC_CAPS) {
 		if (IRC_TAGS["account"])
 			account = IRC_TAGS["account"]
 		else {
-			irc_say(channel, nick ": Only registered users may vote.")
+			irc_say(irc_channel, irc_nick": Only registered users may vote.")
 			return
 		}
 	} else {
 		log_warning("Voting is per-nick...")
-		account = nick
+		account = irc_nick
 	}
 
-	choice = util_array_slice(cmd, 3, cmdlen)
-	if (((channel, poll) in POLL_CHOICES) && !((channel, poll, choice) in POLL_CHOICES)) {
+	choice = util_array_slice(irc_msgv, 3, irc_msgv_len)
+	if (((irc_channel, poll) in POLL_CHOICES) && !((irc_channel, poll, choice) in POLL_CHOICES)) {
 		for (bangpath in POLL_CHOICES) {
 			split(bangpath, path, SUBSEP)
-			if (path[1] != channel || path[2] != poll || !path[3])
+			if (path[1] != irc_channel || path[2] != poll || !path[3])
 				continue
-			msg = msg ", '" path[3] "'"
+			msg = msg ", '"path[3]"'"
 		}
 		sub(/^, /, "", msg)
-		msg = "Please enter a valid choice: " msg
-		irc_say(channel, msg)
+		msg = "Please enter a valid choice: "msg
+		irc_say(irc_channel, msg)
 		return
 	}
 
 	# Already voted? Change your vote
-	if ((channel, poll, account) in POLLS)
-		POLL_CHOICES[channel, poll, POLLS[channel, poll, account]] -= 1
+	if ((irc_channel, poll, account) in POLLS)
+		POLL_CHOICES[irc_channel, poll, POLLS[irc_channel, poll, account]] -= 1
 	else
-		POLLS[channel, poll] += 1
-	POLLS[channel, poll, account] = choice
-	POLL_CHOICES[channel, poll, choice] += 1
-	irc_say(channel, nick ": Your vote has been counted, thank you.")
+		POLLS[irc_channel, poll] += 1
+	POLLS[irc_channel, poll, account] = choice
+	POLL_CHOICES[irc_channel, poll, choice] += 1
+	irc_say(irc_channel, irc_nick": Your vote has been counted, thank you.")
 }
 
-function poll_start(channel, nick, cmd, cmdlen,        bangpath, path, i) {
-	if (channel !~ /^[#&]/) {
-		irc_say(channel, "Polls can only be started in channels.")
+function poll_start(        bangpath, path, i) {
+	if (irc_channel !~ /^[#&]/) {
+		irc_say(irc_channel, "Polls can only be started in channels.")
 		return
 	}
-	if ((channel, cmd[3]) in POLLS) {
+	if ((irc_channel, irc_msgv[3]) in POLLS) {
 		# Poll already in progress
-		poll_end(channel, "", cmd[3], 0)
+		poll_end(irc_msgv[3], 0)
 		return
 	}
 
-	irc_say(channel, "Starting poll: " cmd[3])
-	if (cmdlen > 3) {
-		bangpath = util_array_slice(cmd, 4, cmdlen)
+	irc_say(irc_channel, "Starting poll: "irc_msgv[3])
+	if (irc_msgv_len > 3) {
+		bangpath = util_array_slice(irc_msgv, 4, irc_msgv_len)
 		split(bangpath, path, /[ ]*,[ ]*/)
-		POLL_CHOICES[channel, cmd[3]] = 0
+		POLL_CHOICES[irc_channel, irc_msgv[3]] = 0
 		for (i in path)
-			POLL_CHOICES[channel, cmd[3], path[i]] = 0
+			POLL_CHOICES[irc_channel, irc_msgv[3], path[i]] = 0
 	}
-	POLLS[channel, cmd[3]] = 0
-	POLL_OWNERS[channel, cmd[3]] = nick
+	POLLS[irc_channel, irc_msgv[3]] = 0
+	POLL_OWNERS[irc_channel, irc_msgv[3]] = irc_nick
 }
 
-function poll_list(channel, all,        bangpath, path, msg) {
+function poll_list(all,        bangpath, path, msg) {
 	msg = ""
 	for (bangpath in POLLS) {
 		split(bangpath, path, SUBSEP)
-		if (!all && path[1] != channel)
+		if (!all && path[1] != irc_channel)
 			continue
 		if (!path[2] || path[3])
 			continue
 		msg = msg ", "
 		if (all)
 			msg = msg path[1] "/"
-		msg = msg path[2] " (" POLLS[bangpath] " votes)"
+		msg = msg path[2] " ("POLLS[bangpath]" votes)"
 	}
 	sub(/^, /, "", msg)
 	if (msg)
-		irc_say(channel, "Active polls: " msg)
+		irc_say(irc_channel, "Active polls: "msg)
 	else
-		irc_say(channel, "No active polls")
+		irc_say(irc_channel, "No active polls")
 }
 
-function poll_end(channel, nick, poll, end,       bangpath, path, msg, file, url) {
-	if (nick && POLL_OWNERS[channel, poll] != nick) {
-		irc_say(channel, "This poll is owned by " POLL_OWNERS[channel, poll])
+function poll_end(poll, end,       bangpath, path, msg, file, url) {
+	if (end && !irc_admin && POLL_OWNERS[irc_channel, poll] != irc_nick) {
+		irc_say(irc_channel, "This poll is owned by "POLL_OWNERS[irc_channel, poll])
 		return
 	}
 
 	if (end)
 		msg = "Poll ended. "
-	msg = msg "Total votes: " POLLS[channel, poll]
+	msg = msg"Total votes: "POLLS[irc_channel, poll]
 
 	if (end) {
 		if (end >= 2)
-			file = POLL_DIR "/poll." systime()
+			file = POLL_DIR "/poll."systime()
 
-		delete POLLS[channel, poll]
+		delete POLLS[irc_channel, poll]
 		for (bangpath in POLLS) {
 			split(bangpath, path, SUBSEP)
-			if (path[1] != channel || path[2] != poll || !path[3])
+			if (path[1] != irc_channel || path[2] != poll || !path[3])
 				continue
 
 			if (end >= 2)
@@ -121,64 +121,61 @@ function poll_end(channel, nick, poll, end,       bangpath, path, msg, file, url
 		if (end >= 2)
 			close(file)
 		if (end == 3) {
-			file = "curl -F 'tpaste=<-' https://tpaste.us/ < " util_shell_quote(file)
+			file = "curl -F 'tpaste=<-' https://tpaste.us/ < "util_shell_quote(file)
 			file | getline url
 		}
 	}
 
 	for (bangpath in POLL_CHOICES) {
 		split(bangpath, path, SUBSEP)
-		if (path[1] != channel || path[2] != poll || !path[3])
+		if (path[1] != irc_channel || path[2] != poll || !path[3])
 			continue
 		if (POLL_CHOICES[bangpath] > 0)
-			msg = msg "; '" path[3] "': " POLL_CHOICES[bangpath] " votes"
+			msg = msg"; '"path[3]"': "POLL_CHOICES[bangpath]" votes"
 
 		if (end)
 			delete POLL_CHOICES[bangpath]
 	}
-	irc_say(channel, msg)
+	irc_say(irc_channel, msg)
 	if (url)
-		irc_say(channel, url)
+		irc_say(irc_channel, url)
 
 	if (end) {
-		delete POLL_CHOICES[channel, poll]
-		delete POLL_OWNERS[channel, poll]
+		delete POLL_CHOICES[irc_channel, poll]
+		delete POLL_OWNERS[irc_channel, poll]
 	}
 }
 
 irc_admin && irc_msgv[1] == CMD_PREFIX"poll" {
-	if (irc_msgv[2] == "coup") {
-		poll_end(irc_channel, "", irc_msgv[3], 1)
-		next
-	} else if (irc_msgv[2] == "listall") {
-		poll_list(irc_channel, 1)
+	if (irc_msgv[2] == "listall") {
+		poll_list(1)
 		next
 	} else if (irc_msgv[2] == "export") {
-		poll_end(irc_channel, "", irc_msgv[3], 2)
+		poll_end(irc_msgv[3], 2)
 		next
 	} else if (irc_msgv[2] == "publish") {
-		poll_end(irc_channel, "", irc_msgv[3], 3)
+		poll_end(irc_msgv[3], 3)
 		next
 	}
 }
 
 irc_msgv[1] == CMD_PREFIX"poll" {
 	if (!irc_msgv[2] || irc_msgv[2] == "list") {
-		poll_list(irc_channel, "")
+		poll_list(0)
 		next
 	} else if (irc_msgv[2] == "start") {
-		poll_start(irc_channel, irc_nick, irc_msgv, irc_msgv_len)
+		poll_start()
 		next
 	} else if (irc_msgv[2] == "status") {
-		poll_end(irc_channel, "", irc_msgv[3], 0)
+		poll_end(irc_msgv[3], 0)
 		next
 	} else if (irc_msgv[2] == "end") {
-		poll_end(irc_channel, "", irc_msgv[3], 1)
+		poll_end(irc_msgv[3], 1)
 		next
 	}
 }
 
 irc_msgv[1] == CMD_PREFIX"vote" {
-	poll_vote(irc_channel, irc_nick, irc_msgv, irc_msgv_len)
+	poll_vote()
 	next
 }

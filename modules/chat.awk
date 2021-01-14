@@ -3,7 +3,7 @@
 # See LICENSE for more information.
 
 function chat_markov(trigger, channel, msg) {
-	log_debug("--- markov: (" trigger "/" channel ") " msg)
+	log_debug("--- markov: ("trigger"/"channel") "msg)
 	printf "%d %s %s\n", trigger, channel, msg | CHAT_CMD
 	fflush(CHAT_CMD)
 }
@@ -23,7 +23,7 @@ function chat(channel, msg) {
 }
 
 BEGIN {
-	CHAT_CMD = "python3 modules/markov.py " util_shell_quote(CHAT_FILE)
+	CHAT_CMD = "python3 modules/markov.py "util_shell_quote(CHAT_FILE)
 }
 
 irc_admin && irc_msgv[1] == CMD_PREFIX"chat" {

@@ -81,9 +81,6 @@ configuration option.
 ``%part #channel``
 	Leave the specified channel.
 
-``%poll coup poll_name``
-  Forcibly close a poll on the channel.
-
 ``%poll export poll_name``
   Save the ballots as a tab-separated local file of ``(account,
   choice)`` pairs. See also the ``POLL_DIR`` configuration option.
