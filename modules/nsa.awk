@@ -3,7 +3,7 @@
 # See LICENSE for more information.
 
 irc_msgv[1] == CMD_PREFIX"nsa" {
-	irc_say(irc_channel, "Do skype,yahoo other chat and social communication prog work 2 spoil muslims youth and spy 4 isreal&usa???????")
-	irc_say(irc_channel, "do they log_info and analyse every word we type????????????")
+	irc_say("Do skype,yahoo other chat and social communication prog work 2 spoil muslims youth and spy 4 isreal&usa???????")
+	irc_say("do they log_info and analyse every word we type????????????")
 	next
 }

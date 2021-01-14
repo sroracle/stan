@@ -3,6 +3,6 @@
 # See LICENSE for more information.
 
 irc_msg ~ /^[ ]*h[ ]*$/ {
-	irc_say(irc_channel, "h")
+	irc_say("h")
 	next
 }

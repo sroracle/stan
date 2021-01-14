@@ -3,6 +3,6 @@
 # See LICENSE for more information.
 
 irc_msgv[1] == CMD_PREFIX"uptime" {
-	irc_say(irc_channel, util_get_output("uptime"))
+	irc_say(util_get_output("uptime"))
 	next
 }

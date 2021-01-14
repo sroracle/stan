@@ -8,6 +8,6 @@ irc_msgv[1] == CMD_PREFIX"cocain" {
 	else
 		_cocain_target = irc_rand_nick(irc_channel)
 
-	irc_say(irc_channel, "i fucking hate "_cocain_target". i bet they cnt evil lift many miligram of cocain with penis")
+	irc_say("i fucking hate "_cocain_target". i bet they cnt evil lift many miligram of cocain with penis")
 	next
 }

@@ -4,7 +4,7 @@
 
 function quotes_grab(qchan, nick, quote) {
 	if (nick && !((qchan, nick) in QUOTES)) {
-		irc_say(irc_channel, "who?")
+		irc_say("who?")
 		return
 	} else if (nick)
 		quote = QUOTES[qchan, nick]
@@ -13,13 +13,13 @@ function quotes_grab(qchan, nick, quote) {
 	else if (quote)
 		quote = quote
 	else {
-		irc_say(irc_channel, "huh?")
+		irc_say("huh?")
 		return
 	}
 
 	print quote >> (QUOTE_FILE)
 	close(QUOTE_FILE)
-	irc_say(irc_channel, "Quote added")
+	irc_say("Quote added")
 }
 
 function quotes_rand(search,        argv, quote) {
@@ -31,9 +31,9 @@ function quotes_rand(search,        argv, quote) {
 
 	quote = util_get_output(argv)
 	if (!quote)
-		irc_say(irc_channel, "No results")
+		irc_say("No results")
 	else
-		irc_say(irc_channel, quote)
+		irc_say(quote)
 }
 
 irc_channel ~ /^[#&]/ && irc_msgv[1] == CMD_PREFIX"add" && !irc_ignore {

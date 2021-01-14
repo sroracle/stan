@@ -74,12 +74,12 @@ function uno_decide_play(new_card,        play) {
 
 function uno_play_card(card,        card_v, color, number, i, new_color) {
 	if (!card) {
-		irc_say(UNO_CHAN, "pe")
+		irc_tell(UNO_CHAN, "pe")
 		return
 	}
 
 	if (card == "pe" || card == "pa") {
-		irc_say(UNO_CHAN, card)
+		irc_tell(UNO_CHAN, card)
 		return
 	}
 
@@ -116,7 +116,7 @@ function uno_play_card(card,        card_v, color, number, i, new_color) {
 	} else
 		new_color = ""
 
-	irc_say(UNO_CHAN, "pl "color" "number" "new_color)
+	irc_tell(UNO_CHAN, "pl "color" "number" "new_color)
 }
 
 function uno(msg,        card, discard_v, play) {
@@ -129,7 +129,7 @@ function uno(msg,        card, discard_v, play) {
 		uno_decide_play()
 
 	else if (irc_msg == "you can't do that, "IRC_NICK)
-		irc_say(UNO_CHAN, "pe")
+		irc_tell(UNO_CHAN, "pe")
 
 	else if (irc_msg == IRC_NICK" picks a card" || irc_msg == IRC_NICK" passes turn")
 		return
@@ -231,7 +231,7 @@ irc_msgv[1] == CMD_PREFIX"uno" {
 		UNO_CHAN = irc_msgv[2]
 	else
 		UNO_CHAN = irc_channel
-	irc_say(UNO_CHAN, "jo")
+	irc_tell(UNO_CHAN, "jo")
 	next
 }
 

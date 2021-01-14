@@ -13,6 +13,6 @@ irc_msgv[1] == CMD_PREFIX"police" {
 	if (POLICE == "")
 		POLICE = "OFF"
 
-	irc_say(irc_channel, "POLICE:" POLICE)
+	irc_say("POLICE:"POLICE)
 	next
 }

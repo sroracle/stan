@@ -103,12 +103,12 @@ configuration option.
 	Restart the bot's AWK process. Note that the connection should remain
 	open.
 
-``%say #channel message``
-	Send a message to a particular channel or user.
-
 ``%sync``
 	Resets the list of currently active channels and the users in each
 	one.
+
+``%tell #channel message``
+	Send a message to a particular channel or user.
 
 Acknowledgements
 ----------------

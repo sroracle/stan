@@ -6,18 +6,18 @@ function poll_vote(        poll, choice, account, msg, bangpath, path) {
 	poll = irc_msgv[2]
 
 	if (!((irc_channel, poll) in POLLS)) {
-		irc_say(irc_channel, "Poll does not exist")
+		irc_say("Poll does not exist")
 		return
 	}
 	if (irc_msgv_len < 3) {
-		irc_say(irc_channel, "Please enter a choice")
+		irc_say("Please enter a choice")
 		return
 	}
 	if ("account-tag" in IRC_CAPS) {
 		if (IRC_TAGS["account"])
 			account = IRC_TAGS["account"]
 		else {
-			irc_say(irc_channel, irc_nick": Only registered users may vote.")
+			irc_say(irc_nick": Only registered users may vote.")
 			return
 		}
 	} else {
@@ -35,7 +35,7 @@ function poll_vote(        poll, choice, account, msg, bangpath, path) {
 		}
 		sub(/^, /, "", msg)
 		msg = "Please enter a valid choice: "msg
-		irc_say(irc_channel, msg)
+		irc_say(msg)
 		return
 	}
 
@@ -46,12 +46,12 @@ function poll_vote(        poll, choice, account, msg, bangpath, path) {
 		POLLS[irc_channel, poll] += 1
 	POLLS[irc_channel, poll, account] = choice
 	POLL_CHOICES[irc_channel, poll, choice] += 1
-	irc_say(irc_channel, irc_nick": Your vote has been counted, thank you.")
+	irc_say(irc_nick": Your vote has been counted, thank you.")
 }
 
 function poll_start(        bangpath, path, i) {
 	if (irc_channel !~ /^[#&]/) {
-		irc_say(irc_channel, "Polls can only be started in channels.")
+		irc_say("Polls can only be started in channels.")
 		return
 	}
 	if ((irc_channel, irc_msgv[3]) in POLLS) {
@@ -60,7 +60,7 @@ function poll_start(        bangpath, path, i) {
 		return
 	}
 
-	irc_say(irc_channel, "Starting poll: "irc_msgv[3])
+	irc_say("Starting poll: "irc_msgv[3])
 	if (irc_msgv_len > 3) {
 		bangpath = util_array_slice(irc_msgv, 4, irc_msgv_len)
 		split(bangpath, path, /[ ]*,[ ]*/)
@@ -87,14 +87,14 @@ function poll_list(all,        bangpath, path, msg) {
 	}
 	sub(/^, /, "", msg)
 	if (msg)
-		irc_say(irc_channel, "Active polls: "msg)
+		irc_say("Active polls: "msg)
 	else
-		irc_say(irc_channel, "No active polls")
+		irc_say("No active polls")
 }
 
 function poll_end(poll, end,       bangpath, path, msg, file, url) {
 	if (end && !irc_admin && POLL_OWNERS[irc_channel, poll] != irc_nick) {
-		irc_say(irc_channel, "This poll is owned by "POLL_OWNERS[irc_channel, poll])
+		irc_say("This poll is owned by "POLL_OWNERS[irc_channel, poll])
 		return
 	}
 
@@ -136,9 +136,9 @@ function poll_end(poll, end,       bangpath, path, msg, file, url) {
 		if (end)
 			delete POLL_CHOICES[bangpath]
 	}
-	irc_say(irc_channel, msg)
+	irc_say(msg)
 	if (url)
-		irc_say(irc_channel, url)
+		irc_say(url)
 
 	if (end) {
 		delete POLL_CHOICES[irc_channel, poll]

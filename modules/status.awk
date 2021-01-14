@@ -3,6 +3,6 @@
 # See LICENSE for more information.
 
 irc_msgv[1] == CMD_PREFIX"status" {
-	irc_say(irc_channel, "Child #"CHILD": "util_age()" old with "NR" messages read")
+	irc_say("Child #"CHILD": "util_age()" old with "NR" messages read")
 	next
 }

@@ -35,20 +35,20 @@ irc_admin && irc_msgv[1] == CMD_PREFIX"quit" {
 
 irc_admin && irc_msgv[1] == CMD_PREFIX"restart" {
 	if (system("./stan.sh -W dump >/dev/null")) {
-		irc_say(irc_channel, "Compilation failed; refusing to restart.")
+		irc_say("Compilation failed; refusing to restart.")
 		next
 	}
-	irc_say(irc_channel, "Killing child #" CHILD)
+	irc_say("Killing child #" CHILD)
 	log_warning("****** STOPPING CHILD #" CHILD " ******")
 	exit 69
 }
 
-irc_admin && irc_msgv[1] == CMD_PREFIX"say" {
-	irc_say(irc_msgv[2], util_array_slice(irc_msgv, 3, irc_msgv_len))
+irc_admin && irc_msgv[1] == CMD_PREFIX"sync" {
+	irc_sync()
 	next
 }
 
-irc_admin && irc_msgv[1] == CMD_PREFIX"sync" {
-	irc_sync()
+irc_admin && irc_msgv[1] == CMD_PREFIX"tell" {
+	irc_tell(irc_msgv[2], util_array_slice(irc_msgv, 3, irc_msgv_len))
 	next
 }

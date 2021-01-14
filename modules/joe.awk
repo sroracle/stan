@@ -3,9 +3,9 @@
 # See LICENSE for more information.
 
 $2 == "JOIN" && irc_channel == "#sporks" && irc_nick == "joe" {
-	irc_say("#sporks", "boj")
+	irc_say("boj")
 }
 
 $2 == "QUIT" && irc_nick == "joe" {
-	irc_say("#sporks", "eoj")
+	irc_tell("#sporks", "eoj")
 }

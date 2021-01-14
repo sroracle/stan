@@ -96,7 +96,7 @@ function irc_save_tags(        tags, tag, sep, value) {
 	util_rm_field(1)
 }
 
-function irc_say(channel, msg) {
+function irc_tell(channel, msg) {
 	if (length(msg) > 450) {
 		IRC_MORE[channel] = substr(msg, 451, length(msg))
 		msg = substr(msg, 1, 450) " [%more]"
@@ -104,6 +104,10 @@ function irc_say(channel, msg) {
 
 	log_ndebug(sprintf(">>> (%s) <%s> %s", channel, IRC_NICK, msg))
 	irc_send("PRIVMSG " channel " :" msg)
+}
+
+function irc_say(msg) {
+	irc_tell(irc_channel, msg)
 }
 
 function irc_set_nick(nick) {
@@ -346,8 +350,8 @@ irc_msgv[1] == CMD_PREFIX"more" && !irc_ignore {
 	if (IRC_MORE[irc_channel]) {
 		_irc_more = IRC_MORE[irc_channel]
 		delete IRC_MORE[irc_channel]
-		irc_say(irc_channel, _irc_more)
+		irc_say(_irc_more)
 	} else
-		irc_say(irc_channel, "That's it.")
+		irc_say("That's it.")
 	next
 }
