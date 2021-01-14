@@ -22,8 +22,8 @@ function config_load() {
 			IRC_PASSWORD = $2
 		else if ($1 == "GECOS")
 			IRC_GECOS = $2
-		else if ($1 == "CMD_PATTERN")
-			CMD_PATTERN = $2
+		else if ($1 == "CMD_PREFIX")
+			CMD_PREFIX = $2
 		else if ($1 == "CHANNELS")
 			IRC_CHANNELS[$2] = 0
 		else if ($1 == "BATTLE_CHANS")

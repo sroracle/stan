@@ -342,7 +342,7 @@ $2 ~ "^(PRIVMSG|NOTICE)$" {
 		irc_admin = 1
 }
 
-irc_msg ~ CMD_PATTERN"more$" && !irc_ignore {
+irc_msgv[1] == CMD_PREFIX"more" && !irc_ignore {
 	if (IRC_MORE[irc_channel]) {
 		_irc_more = IRC_MORE[irc_channel]
 		delete IRC_MORE[irc_channel]

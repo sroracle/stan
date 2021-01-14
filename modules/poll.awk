@@ -146,47 +146,39 @@ function poll_end(channel, nick, poll, end,       bangpath, path, msg, file, url
 	}
 }
 
-irc_admin && irc_msg ~ CMD_PATTERN"poll coup " {
-	poll_end(irc_channel, "", irc_msgv[3], 1)
-	next
+irc_admin && irc_msgv[1] == CMD_PREFIX"poll" {
+	if (irc_msgv[2] == "coup") {
+		poll_end(irc_channel, "", irc_msgv[3], 1)
+		next
+	} else if (irc_msgv[2] == "listall") {
+		poll_list(irc_channel, 1)
+		next
+	} else if (irc_msgv[2] == "export") {
+		poll_end(irc_channel, "", irc_msgv[3], 2)
+		next
+	} else if (irc_msgv[2] == "publish") {
+		poll_end(irc_channel, "", irc_msgv[3], 3)
+		next
+	}
 }
 
-irc_admin && irc_msg ~ CMD_PATTERN"poll listall$" {
-	poll_list(irc_channel, 1)
-	next
+irc_msgv[1] == CMD_PREFIX"poll" {
+	if (!irc_msgv[2] || irc_msgv[2] == "list") {
+		poll_list(irc_channel, "")
+		next
+	} else if (irc_msgv[2] == "start") {
+		poll_start(irc_channel, irc_nick, irc_msgv, irc_msgv_len)
+		next
+	} else if (irc_msgv[2] == "status") {
+		poll_end(irc_channel, "", irc_msgv[3], 0)
+		next
+	} else if (irc_msgv[2] == "end") {
+		poll_end(irc_channel, "", irc_msgv[3], 1)
+		next
+	}
 }
 
-irc_admin && irc_msg ~ CMD_PATTERN"poll export " {
-	poll_end(irc_channel, "", irc_msgv[3], 2)
-	next
-}
-
-irc_admin && irc_msg ~ CMD_PATTERN"poll publish " {
-	poll_end(irc_channel, "", irc_msgv[3], 3)
-	next
-}
-
-irc_msg ~ CMD_PATTERN"vote " {
+irc_msgv[1] == CMD_PREFIX"vote" {
 	poll_vote(irc_channel, irc_nick, irc_msgv, irc_msgv_len)
-	next
-}
-
-irc_msg ~ CMD_PATTERN"poll($| list$)" {
-	poll_list(irc_channel, "")
-	next
-}
-
-irc_msg ~ CMD_PATTERN"poll start " {
-	poll_start(irc_channel, irc_nick, irc_msgv, irc_msgv_len)
-	next
-}
-
-irc_msg ~ CMD_PATTERN"poll status " {
-	poll_end(irc_channel, "", irc_msgv[3], 0)
-	next
-}
-
-irc_msg ~ CMD_PATTERN"poll end " {
-	poll_end(irc_channel, "", irc_msgv[3], 1)
 	next
 }

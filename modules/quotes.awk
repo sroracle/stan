@@ -36,12 +36,12 @@ function quotes_rand(search,        argv, quote) {
 		irc_say(irc_channel, quote)
 }
 
-irc_channel ~ /^[#&]/ && irc_msg ~ CMD_PATTERN"add " && !irc_ignore {
+irc_channel ~ /^[#&]/ && irc_msgv[1] == CMD_PREFIX"add" && !irc_ignore {
 	quotes_grab("", "", util_array_slice(irc_msgv, 2, irc_msgv_len))
 	next
 }
 
-irc_channel ~ /^[#&]/ && irc_msg ~ CMD_PATTERN"grab( |$)" && !irc_ignore {
+irc_channel ~ /^[#&]/ && irc_msgv[1] == CMD_PREFIX"grab" && !irc_ignore {
 	if (irc_msgv[2])
 		quotes_grab(irc_channel, irc_msgv[2])
 	else
@@ -49,7 +49,7 @@ irc_channel ~ /^[#&]/ && irc_msg ~ CMD_PATTERN"grab( |$)" && !irc_ignore {
 	next
 }
 
-irc_msg ~ CMD_PATTERN"rand( |$)" && !irc_ignore {
+irc_msgv[1] == CMD_PREFIX"rand" && !irc_ignore {
 	if (irc_msgv[2])
 		quotes_rand(util_array_slice(irc_msgv, 2, irc_msgv_len))
 	else
@@ -57,7 +57,7 @@ irc_msg ~ CMD_PATTERN"rand( |$)" && !irc_ignore {
 	next
 }
 
-irc_channel ~ /^[#&]/ && irc_msg !~ CMD_PATTERN {
+irc_channel ~ /^[#&]/ && irc_msgv[1] !~ "^"CMD_PREFIX {
 	QUOTES[irc_channel] = "<"irc_nick"> "irc_msg
 	QUOTES[irc_channel, irc_nick] = "<"irc_nick"> "irc_msg
 }

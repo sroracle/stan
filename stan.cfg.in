@@ -13,8 +13,8 @@ USERNAME=stan
 PASSWORD=
 # Also known as the real name field
 GECOS=Stanley Kudzu
-# ERE for commands - usually should start with ^ to match beginning-of-line
-CMD_PATTERN=^[%]
+# Character to prefix commands with (e.g. %more)
+CMD_PREFIX=%
 # Which channels to join (one per line)
 CHANNELS=#bots
 CHANNELS=#stan

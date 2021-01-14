@@ -226,7 +226,7 @@ function uno(msg,        card, discard_v, play) {
 		chat(UNO_CHAN, msg)
 }
 
-irc_msg ~ CMD_PATTERN"uno( |$)" {
+irc_msgv[1] == CMD_PREFIX"uno" {
 	if (irc_msgv[2])
 		UNO_CHAN = irc_msgv[2]
 	else
