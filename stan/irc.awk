@@ -113,7 +113,7 @@ function irc_tell(channel, msg) {
 		msg = substr(msg, 1, 450)" [%more]"
 	}
 
-	log_ndebug(sprintf(">>> (%s) <%s> %s", channel, IRC_NICK, msg))
+	log_ndebug(">>> ("channel") <"IRC_NICK"> "msg)
 	irc_send("PRIVMSG "channel" :" msg)
 }
 
