@@ -2,7 +2,7 @@
 # Copyright (c) 2019-2021 Max Rees
 # See LICENSE for more information.
 
-irc_msgv[1] == CMD_PREFIX"cocain" {
+irc_cmd == "cocain" {
 	if (irc_msgv[2])
 		_cocain_target = irc_msgv[2]
 	else

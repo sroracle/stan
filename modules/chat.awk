@@ -26,12 +26,12 @@ BEGIN {
 	CHAT_CMD = "python3 modules/markov.py "util_shell_quote(CHAT_FILE)
 }
 
-irc_admin && irc_msgv[1] == CMD_PREFIX"chat" {
+irc_admin && irc_cmd == "chat" {
 	CHAT_CHANNELS[irc_channel] = 1
 	next
 }
 
-irc_admin && irc_msgv[1] == CMD_PREFIX"quiet" {
+irc_admin && irc_cmd == "quiet" {
 	delete CHAT_CHANNELS[irc_channel]
 	next
 }

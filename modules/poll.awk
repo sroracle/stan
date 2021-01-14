@@ -50,7 +50,7 @@ function poll_vote(        poll, choice, account, msg, bangpath, path) {
 }
 
 function poll_start(        bangpath, path, i) {
-	if (irc_channel !~ /^[#&]/) {
+	if (!irc_msg_public) {
 		irc_say("Polls can only be started in channels.")
 		return
 	}
@@ -83,7 +83,7 @@ function poll_list(all,        bangpath, path, msg) {
 		msg = msg ", "
 		if (all)
 			msg = msg path[1] "/"
-		msg = msg path[2] " ("POLLS[bangpath]" votes)"
+		msg = msg path[2]" ("POLLS[bangpath]" votes)"
 	}
 	sub(/^, /, "", msg)
 	if (msg)
@@ -104,7 +104,7 @@ function poll_end(poll, end,       bangpath, path, msg, file, url) {
 
 	if (end) {
 		if (end >= 2)
-			file = POLL_DIR "/poll."systime()
+			file = POLL_DIR"/poll."systime()
 
 		delete POLLS[irc_channel, poll]
 		for (bangpath in POLLS) {
@@ -123,6 +123,7 @@ function poll_end(poll, end,       bangpath, path, msg, file, url) {
 		if (end == 3) {
 			file = "curl -F 'tpaste=<-' https://tpaste.us/ < "util_shell_quote(file)
 			file | getline url
+			close(file)
 		}
 	}
 
@@ -146,7 +147,7 @@ function poll_end(poll, end,       bangpath, path, msg, file, url) {
 	}
 }
 
-irc_admin && irc_msgv[1] == CMD_PREFIX"poll" {
+irc_admin && irc_cmd == "poll" {
 	if (irc_msgv[2] == "listall") {
 		poll_list(1)
 		next
@@ -159,7 +160,7 @@ irc_admin && irc_msgv[1] == CMD_PREFIX"poll" {
 	}
 }
 
-irc_msgv[1] == CMD_PREFIX"poll" {
+irc_cmd == "poll" {
 	if (!irc_msgv[2] || irc_msgv[2] == "list") {
 		poll_list(0)
 		next
@@ -175,7 +176,7 @@ irc_msgv[1] == CMD_PREFIX"poll" {
 	}
 }
 
-irc_msgv[1] == CMD_PREFIX"vote" {
+irc_cmd == "vote" {
 	poll_vote()
 	next
 }

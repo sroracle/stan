@@ -2,7 +2,8 @@
 # Copyright (c) 2019-2021 Max Rees
 # See LICENSE for more information.
 
-function config_load() {
+function config_load(        oldfs) {
+	oldfs = FS
 	FS = "="
 
 	while ((getline < ENVIRON["STAN_CFG"]) == 1) {
@@ -22,8 +23,10 @@ function config_load() {
 			IRC_PASSWORD = $2
 		else if ($1 == "GECOS")
 			IRC_GECOS = $2
-		else if ($1 == "CMD_PREFIX")
+		else if ($1 == "CMD_PREFIX") {
 			CMD_PREFIX = $2
+			CMD_PREFIX_LEN = length($2)
+		}
 		else if ($1 == "CHANNELS")
 			IRC_CHANNELS[$2] = 0
 		else if ($1 == "BATTLE_CHANS")
@@ -45,5 +48,5 @@ function config_load() {
 	}
 
 	close(ENVIRON["STAN_CFG"])
-	FS = " "
+	FS = oldfs
 }

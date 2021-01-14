@@ -22,5 +22,5 @@ function log_ndebug(msg) {
 }
 
 function log_warning(msg) {
-	log_info("*** " msg)
+	log_info("*** "msg)
 }

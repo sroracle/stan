@@ -1,20 +1,15 @@
-# SPDX-License-Identifier: EFL-2.0 AND GPL-3.0
+# SPDX-License-Identifier: EFL-2.0
 # Copyright (c) 2019-2021 Max Rees
 # See LICENSE for more information.
-#
-# The util_shell_quote function was adapted from:
-# https://www.gnu.org/software/gawk/manual/html_node/Shell-Quoting.html
-# Copyright (c) 2014 Michael Brennan
-# See LICENSE.GPL3 for more information.
 
 function util_age(        delta, days, hours, mins, secs) {
 	delta = systime() - UTIL_BIRTH
 	days = int(delta / (3600 * 24))
 	if (days > 0) {
 		if (days == 1)
-			days = days " day, "
+			days = days" day, "
 		else
-			days = days " days, "
+			days = days" days, "
 		hours = int((delta % (3600 * 24)) / 3600)
 	} else {
 		days = ""
@@ -25,10 +20,10 @@ function util_age(        delta, days, hours, mins, secs) {
 	return sprintf("%s%02d:%02d:%02d", days, hours, mins, secs)
 }
 
-function util_array_slice(array, lower, upper,        i) {
+function util_array_slice(array, lower, upper,        s, i) {
 		s = ""
 		for (i = lower; i <= upper; i++)
-			s = s " " array[i]
+			s = s" "array[i]
 		sub(/^ /, "", s)
 		return s
 }
@@ -62,19 +57,9 @@ function util_rm_subarray(array, key1,        bangpath, path) {
 	delete array[key1]
 }
 
-function util_shell_quote(str,        SINGLE, QSINGLE, len, exploded, i) {
-	if (str == "")
-		return "\047\047"
-
-	SINGLE = "\047"
-	QSINGLE = "\"\047\""
-	len = split(str, exploded, SINGLE)
-
-	str = SINGLE exploded[1] SINGLE
-	for (i = 2; i <= len; i++)
-		str = str QSINGLE SINGLE exploded[i] SINGLE
-
-	return str
+function util_shell_quote(str) {
+	gsub(/'/, "'\\''", str)
+	return "'"str"'"
 }
 
 BEGIN {

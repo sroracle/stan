@@ -113,8 +113,7 @@ function uno_play_card(card,        card_v, color, number, i, new_color) {
 			new_color = "y"
 		else
 			new_color = "g"
-	} else
-		new_color = ""
+	}
 
 	irc_tell(UNO_CHAN, "pl "color" "number" "new_color)
 }
@@ -226,7 +225,7 @@ function uno(msg,        card, discard_v, play) {
 		chat(UNO_CHAN, irc_msg)
 }
 
-irc_msgv[1] == CMD_PREFIX"uno" {
+irc_cmd == "uno" {
 	if (irc_msgv[2])
 		UNO_CHAN = irc_msgv[2]
 	else

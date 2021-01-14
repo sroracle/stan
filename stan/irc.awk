@@ -3,14 +3,14 @@
 # See LICENSE for more information.
 
 function irc_send(msg) {
-	log_debug(">>> " msg)
+	log_debug(">>> "msg)
 	print msg
 	fflush()
 }
 
-function irc_cmd(cmd, args) {
-	log_ndebug("*** " cmd " " args)
-	irc_send(cmd " " args)
+function irc_do(cmd) {
+	log_ndebug(">>> "cmd)
+	irc_send(cmd)
 }
 
 function irc_case_expand(c) {
@@ -25,13 +25,13 @@ function irc_case_expand(c) {
 	else if (c == "`" || c == "-")
 		return c
 	else
-		return "[" tolower(c) toupper(c) "]"
+		return "["tolower(c) toupper(c)"]"
 }
 
 function irc_identify() {
 	if (!IRC_PASSWORD)
 		return
-	log_info("*** PRIVMSG NickServ :identify "IRC_NICK" *******")
+	log_info(">>> PRIVMSG NickServ :identify "IRC_NICK" *******")
 	print "PRIVMSG NickServ :identify "IRC_NICK" "IRC_PASSWORD
 	fflush()
 }
@@ -47,7 +47,7 @@ function irc_rand_nick(channel,        i, j, bangpath, path) {
 	}
 }
 
-function irc_save_isupport(        token, sep, value) {
+function irc_save_isupport(        token, sep, value, i, j) {
 	for (i = 4; i <= NF; i++) {
 		token = $(i)
 		if (!token)
@@ -63,16 +63,27 @@ function irc_save_isupport(        token, sep, value) {
 			continue
 		}
 
-		if (token == "PREFIX") {
-			IRC_PREFIX = value
-			sub(/^[(][^)]+[)]/, "", IRC_PREFIX)
-			log_info("PREFIX="IRC_PREFIX)
-		}
-		if (token == "BOT")
-			irc_cmd("MODE", IRC_NICK" +"value)
-
 		IRC_ISUPPORT[token] = value
 		log_debug("ISUPPORT "token"="value"")
+
+		if (token == "BOT")
+			irc_do("MODE "IRC_NICK" +"value)
+		else if (token == "CHANTYPES") {
+			delete IRC_CHANTYPES
+			for (j = 1; j <= length(value); j++) {
+				sep = substr(value, j, 1)
+				IRC_CHANTYPES[sep] = 1
+				log_warning("CHANTYPE="sep)
+			}
+		} else if (token == "PREFIX") {
+			delete IRC_PREFIX
+			sub(/^[(][^)]+[)]/, "", value)
+			for (j = 1; j <= length(value); j++) {
+				sep = substr(value, j, 1)
+				IRC_PREFIX[sep] = 1
+				log_warning("PREFIX="sep)
+			}
+		}
 	}
 }
 
@@ -99,11 +110,11 @@ function irc_save_tags(        tags, tag, sep, value) {
 function irc_tell(channel, msg) {
 	if (length(msg) > 450) {
 		IRC_MORE[channel] = substr(msg, 451, length(msg))
-		msg = substr(msg, 1, 450) " [%more]"
+		msg = substr(msg, 1, 450)" [%more]"
 	}
 
 	log_ndebug(sprintf(">>> (%s) <%s> %s", channel, IRC_NICK, msg))
-	irc_send("PRIVMSG " channel " :" msg)
+	irc_send("PRIVMSG "channel" :" msg)
 }
 
 function irc_say(msg) {
@@ -112,7 +123,7 @@ function irc_say(msg) {
 
 function irc_set_nick(nick) {
 	IRC_NICK = nick
-	irc_cmd("NICK", nick)
+	irc_do("NICK "nick)
 
 	nick_pattern = ""
 	for (i = 1; i <= length(IRC_NICK); i++) {
@@ -121,11 +132,19 @@ function irc_set_nick(nick) {
 		nick_pattern = nick_pattern c
 	}
 
-	log_info("Nick pattern is: " nick_pattern)
+	log_info("Nick pattern is: "nick_pattern)
 
-	ADDRESS_PATTERN = "^" nick_pattern "[:, ]+ ?"
+	ADDRESS_PATTERN = "^"nick_pattern"[:, ]+ ?"
 	CHAT_PATTERN = "[^]^a-z0-9{}_`|\\\\])"
-	CHAT_PATTERN = "(^|" CHAT_PATTERN nick_pattern "($|" CHAT_PATTERN
+	CHAT_PATTERN = "(^|"CHAT_PATTERN nick_pattern"($|" CHAT_PATTERN
+}
+
+function irc_strip_prefix(s,        i) {
+	for (i = 1; i <= length(s); i++)
+		if (!(substr(s, i, 1) in IRC_PREFIX)) {
+			break
+		}
+	return substr(s, i)
 }
 
 function irc_sync() {
@@ -133,23 +152,29 @@ function irc_sync() {
 	delete IRC_ISUPPORT
 	delete IRC_CHANNELS
 	delete IRC_NAMES
+
+	delete IRC_CHANTYPES
+	delete IRC_PREFIX
+
 	irc_identify()
-	irc_cmd("CAP", "LIST")
-	irc_cmd("VERSION")
-	irc_cmd("WHOIS", IRC_NICK)
+	irc_do("CAP LIST")
+	irc_do("VERSION")
+	irc_do("WHOIS "IRC_NICK)
 }
 
 {
 	irc_admin = 0
 	irc_ignore = 0
+	irc_msg_public = 0
 	irc_nick = ""
 	irc_hostmask = ""
 	irc_channel = ""
 	irc_msg = ""
 	delete irc_msgv
 	irc_msgv_len = 0
+	irc_cmd = ""
 
-	log_debug("<<< " $0)
+	log_debug("<<< "$0)
 	sub(/[\r\n]+$/, "")
 	irc_save_tags()
 }
@@ -158,7 +183,7 @@ function irc_sync() {
 $2 == "001" {
 	log_warning("Connected!")
 	for (_irc_channel in IRC_CHANNELS)
-		irc_cmd("JOIN", _irc_channel)
+		irc_do("JOIN "_irc_channel)
 	next
 }
 
@@ -182,10 +207,9 @@ $2 == "319" {
 		sub(/^:/, "", $5)
 		for (_irc_i = 5; _irc_i <= NF; _irc_i++) {
 			_irc_channel = $(_irc_i)
-			if (IRC_PREFIX)
-				sub("^["IRC_PREFIX"]+", "", _irc_channel)
+			_irc_channel = irc_strip_prefix(_irc_channel)
 			IRC_CHANNELS[_irc_channel] = 0
-			irc_cmd("NAMES", _irc_channel)
+			irc_do("NAMES "_irc_channel)
 		}
 	}
 	next
@@ -201,27 +225,26 @@ $2 == "353" {
 	sub(/^:/, "", $6)
 	for (_irc_i = 6; _irc_i <= NF; _irc_i++) {
 		_irc_nick = $(_irc_i)
-		if (IRC_PREFIX)
-			sub("^["IRC_PREFIX"]+", "", _irc_nick)
-		_irc_s = _irc_s " " _irc_nick
+		_irc_nick = irc_strip_prefix(_irc_nick)
+		_irc_s = _irc_s" "_irc_nick
 		if (!((_irc_channel, _irc_nick) in IRC_NAMES)) {
 			IRC_CHANNELS[_irc_channel] += 1
 			IRC_NAMES[_irc_channel, _irc_nick] = 1
 		}
 	}
 
-	log_ndebug("NAMES "_irc_channel" ("IRC_CHANNELS[_irc_channel]"):" _irc_s)
+	log_warning("NAMES "_irc_channel" ("IRC_CHANNELS[_irc_channel]"):" _irc_s)
 	next
 }
 
 # Display errors from the server (4xx, 5xx, and sometimes 9xx numerics)
 $2 ~ /^[459][0-9][0-9]/ {
-	log_ndebug("<<< " $0)
+	log_ndebug("<<< "$0)
 	next
 }
 
-/^PING / {
-	irc_send("PONG " $2)
+$1 == "PING" {
+	irc_send("PONG "$2)
 	next
 }
 
@@ -232,7 +255,7 @@ $2 == "CAP" {
 	sub(/^:/, "", $5)
 	if ($4 == "ACK" || $4 == "LIST")
 		for (_irc_i = 5; _irc_i <= NF; _irc_i++) {
-			log_info("CAP ACK "$(_irc_i))
+			log_warning("CAP ACK "$(_irc_i))
 			IRC_CAPS[$(_irc_i)] = 1
 		}
 	next
@@ -307,13 +330,20 @@ $2 ~ "^(PRIVMSG|NOTICE)$" {
 	if (!_irc_bang)
 		next
 	irc_nick = substr($1, 2, _irc_bang - 2)
+
 	irc_hostmask = substr($1, _irc_bang + 1)
+	irc_admin = irc_hostmask == OWNERMASK
+
 	irc_channel = $3
+	irc_msg_public = substr(irc_channel, 1, 1) in IRC_CHANTYPES
+
 	sub(/^:/, "", $4)
 	# FIXME this is hacky
-	_irc_msgstart = length($1 " " $2 " " $3 " ") + 1
+	_irc_msgstart = length($1" "$2" "$3" ") + 1
 	irc_msg = substr($0, _irc_msgstart)
 	irc_msgv_len = split(irc_msg, irc_msgv, " ")
+	if (substr(irc_msgv[1], 1, CMD_PREFIX_LEN) == CMD_PREFIX)
+		irc_cmd = substr(irc_msgv[1], CMD_PREFIX_LEN+1)
 
 	if (irc_channel == IRC_NICK) {
 		irc_channel = irc_nick
@@ -322,7 +352,7 @@ $2 ~ "^(PRIVMSG|NOTICE)$" {
 		_irc_fmt = "("irc_channel") <"irc_nick">"
 
 	if ("batch" in IRC_TAGS && (irc_channel, IRC_TAGS["batch"]) in IRC_IGNORE_BATCH) {
-		log_ndebug(sprintf("~~~ %s %s", _irc_fmt, irc_msg))
+		log_ndebug("~~~ "_irc_fmt" "irc_msg)
 		next
 	}
 
@@ -332,21 +362,21 @@ $2 ~ "^(PRIVMSG|NOTICE)$" {
 
 	for (_irc_pattern in IGNORE_PATTERN)
 		if (irc_msg ~ _irc_pattern) {
-			log_ndebug(sprintf("~~~ %s %s", _irc_fmt, irc_msg))
+			log_ndebug("~~~ "_irc_fmt" "irc_msg)
 			irc_ignore = 1
+			break
 		}
 
-	if (irc_nick in IGNORE || irc_nick == IRC_NICK) {
-		log_ndebug(sprintf("~~~ %s %s", _irc_fmt, irc_msg))
-		irc_ignore = 1
-	} else if (!irc_ignore)
-		log_ndebug(sprintf("<<< %s %s", _irc_fmt, irc_msg))
-
-	if (irc_hostmask == OWNERMASK)
-		irc_admin = 1
+	if (!irc_ignore) {
+		if (irc_nick in IGNORE || irc_nick == IRC_NICK) {
+			log_ndebug("~~~ "_irc_fmt" "irc_msg)
+			irc_ignore = 1
+		} else
+			log_ndebug("<<< "_irc_fmt" "irc_msg)
+	}
 }
 
-irc_msgv[1] == CMD_PREFIX"more" && !irc_ignore {
+irc_cmd == "more" && !irc_ignore {
 	if (IRC_MORE[irc_channel]) {
 		_irc_more = IRC_MORE[irc_channel]
 		delete IRC_MORE[irc_channel]

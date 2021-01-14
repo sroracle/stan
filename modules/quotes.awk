@@ -36,22 +36,22 @@ function quotes_rand(search,        argv, quote) {
 		irc_say(quote)
 }
 
-irc_channel ~ /^[#&]/ && irc_msgv[1] == CMD_PREFIX"add" && !irc_ignore {
+irc_msg_public && irc_cmd == "add" && !irc_ignore {
 	quotes_grab("", "", util_array_slice(irc_msgv, 2, irc_msgv_len))
 	next
 }
 
-irc_channel ~ /^[#&]/ && irc_msgv[1] == CMD_PREFIX"grab" && !irc_ignore {
+irc_msg_public && irc_cmd == "grab" && !irc_ignore {
 	quotes_grab(irc_channel, irc_msgv[2])
 	next
 }
 
-irc_msgv[1] == CMD_PREFIX"rand" && !irc_ignore {
+irc_cmd == "rand" && !irc_ignore {
 	quotes_rand(util_array_slice(irc_msgv, 2, irc_msgv_len))
 	next
 }
 
-irc_channel ~ /^[#&]/ && irc_msgv[1] !~ "^"CMD_PREFIX {
+irc_msg_public && !irc_cmd {
 	QUOTES[irc_channel] = "<"irc_nick"> "irc_msg
 	QUOTES[irc_channel, irc_nick] = "<"irc_nick"> "irc_msg
 }
