@@ -13,19 +13,50 @@ function irc_do(cmd) {
 	irc_send(cmd)
 }
 
-function irc_case_expand(c) {
-	if (c == "[" || c == "{")
-		return "[[{]"
-	else if (c == "]" || c == "}")
-		return "[]}]"
-	else if (c == "|" || c == "\\")
-		return "[|\\\\]"
-	else if (c == "^")
-		return "\\^"
-	else if (c == "`" || c == "-")
+function irc_tolower_c(c,        i) {
+	i = index(CONSTANTS_CASEFOLD_UPPER, c)
+	if (!i || i > CONSTANTS_CASEFOLD_MAX[IRC_CASEMAPPING])
 		return c
-	else
-		return "["tolower(c) toupper(c)"]"
+	return substr(CONSTANTS_CASEFOLD_LOWER, i, 1)
+}
+
+function irc_toupper_c(c,        i) {
+	i = index(CONSTANTS_CASEFOLD_LOWER, c)
+	if (!i || i > CONSTANTS_CASEFOLD_MAX[IRC_CASEMAPPING])
+		return c
+	return substr(CONSTANTS_CASEFOLD_UPPER, i, 1)
+}
+
+function irc_tolower(s1,        s2, i) {
+	s2 = ""
+	for (i = 1; i <= length(s); i++)
+		s2 = s2 irc_tolower_c(substr(s1, i, 1))
+	return s2
+}
+
+function irc_case_regex(s,        pat, i, c1, c2) {
+	pat = ""
+	for (i = 1; i <= length(s); i++) {
+		c1 = substr(s, i, 1)
+		if (c1 == "^") {
+			pat = pat "\\^"
+			c2 = irc_tolower_c(c1)
+			if (c2 != "^")
+				pat = pat "["c2"]"
+		} else if (c1 == "\\") {
+			pat = pat "\\\\"
+			c2 = irc_tolower_c(c1)
+			if (c2 != "\\")
+				pat = pat "["c2"]"
+		} else if (c1 == "]" ) {
+			pat = pat "\\]"
+			c2 = irc_tolower_c(c1)
+			if (c2 != "]")
+				pat = pat "["c2"]"
+		} else
+			pat = pat "["irc_toupper_c(c1) irc_tolower_c(c1)"]"
+	}
+	return pat
 }
 
 function irc_identify() {
@@ -68,7 +99,15 @@ function irc_save_isupport(        token, sep, value, i, j) {
 
 		if (token == "BOT")
 			irc_do("MODE "IRC_NICK" +"value)
-		else if (token == "CHANTYPES") {
+		else if (token == "CASEMAPPING") {
+			if (!(value in CONSTANTS_CASEFOLD_MAX)) {
+				log_info("!!! ERROR: Invalid CASEMAPPING: '"value"'")
+				exit 1
+			}
+			IRC_CASEMAPPING = value
+			log_warning("CASEMAPPING="value)
+			irc_set_nick(IRC_NICK)
+		} else if (token == "CHANTYPES") {
 			delete IRC_CHANTYPES
 			for (j = 1; j <= length(value); j++) {
 				sep = substr(value, j, 1)
@@ -121,17 +160,11 @@ function irc_say(msg) {
 	irc_tell(irc_channel, msg)
 }
 
-function irc_set_nick(nick) {
+function irc_set_nick(nick,        nick_pattern) {
 	IRC_NICK = nick
-	irc_do("NICK "nick)
+	irc_do("NICK "IRC_NICK)
 
-	nick_pattern = ""
-	for (i = 1; i <= length(IRC_NICK); i++) {
-		c = substr(IRC_NICK, i, 1)
-		c = irc_case_expand(c)
-		nick_pattern = nick_pattern c
-	}
-
+	nick_pattern = irc_case_regex(IRC_NICK)
 	log_info("Nick pattern is: "nick_pattern)
 
 	ADDRESS_PATTERN = "^"nick_pattern"[:, ]+ ?"
