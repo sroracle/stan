@@ -71,9 +71,11 @@ function irc_rand_nick(channel,        i, j, bangpath, path) {
 	j = util_randrange(1, IRC_CHANNELS[channel])
 	i = 0
 	for (bangpath in IRC_NAMES) {
-		i++
 		split(bangpath, path, SUBSEP)
-		if (path[1] == channel && i == j)
+		if (path[1] != channel)
+			continue
+		i++
+		if (i == j)
 			return path[2]
 	}
 }
