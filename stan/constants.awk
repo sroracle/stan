@@ -12,4 +12,7 @@ BEGIN {
 	# Set a default casemapping - this can be changed if the server
 	# sends ISUPPORT CASEMAPPING=
 	IRC_CASEMAPPING = "strict-rfc1459"
+
+	CONSTANTS_START_SCRIPT = "./stan.sh"
+	CONSTANTS_WANT_CAPS = "account-tag batch chghost message-tags"
 }

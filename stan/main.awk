@@ -16,10 +16,10 @@ BEGIN {
 	EXIT_RESTART = 69
 	if (!CHILD) {
 		child_number = 1
-		child_status = system("./stan.sh -v CHILD="child_number)
+		child_status = system(CONSTANTS_START_SCRIPT" -v CHILD="child_number)
 		while (child_status == EXIT_RESTART) {
 			child_number++
-			child_status = system("./stan.sh -v CHILD="child_number)
+			child_status = system(CONSTANTS_START_SCRIPT" -v CHILD="child_number)
 		}
 		exit child_status
 	}
@@ -27,7 +27,7 @@ BEGIN {
 	log_warning("****** STARTING CHILD #"CHILD" ******")
 
 	if (CHILD == 1) {
-		irc_do("CAP REQ :account-tag batch chghost message-tags")
+		irc_do("CAP REQ :"CONSTANTS_WANT_CAPS)
 		irc_do("CAP END")
 		if (IRC_PASSWORD) {
 			log_info("*** PASS *******")

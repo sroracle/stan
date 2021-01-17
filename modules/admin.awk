@@ -35,7 +35,7 @@ irc_admin && irc_cmd == "quit" {
 }
 
 irc_admin && irc_cmd == "restart" {
-	if (system("./stan.sh -W dump >/dev/null")) {
+	if (system(CONSTANTS_START_SCRIPT" -W dump >/dev/null")) {
 		irc_say("Compilation failed; refusing to restart.")
 		next
 	}
