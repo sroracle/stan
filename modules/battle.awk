@@ -218,8 +218,10 @@ function battle_sanitize_weapon(        pronouns) {
 	if (!BATTLE_WEAPON) {
 		if (BATTLE_ACTION == "fites")
 			BATTLE_WEAPON = "the 1v1 fite irl"
-		else if (BATTLE_ACTION == "attacks" || BATTLE_ACTION == "stabs")
+		else if (BATTLE_ACTION ~ "^(attacks|stabs)$")
 			BATTLE_WEAPON = "the knife"
+		else if (BATTLE_ACTION ~ "^(throws|drops|thwacks)$")
+			BATTLE_WEAPON = BATTLE_ATTACKER
 	} else if (BATTLE_ACTION == "drops" && BATTLE_WEAPON == "the bass")
 		BATTLE_WEAPON = "the dubstep"
 }
