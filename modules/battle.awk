@@ -206,10 +206,8 @@ function battle_sanitize_target() {
 }
 
 function battle_sanitize_weapon(        pronouns) {
-	pronouns = BATTLE_WEAPON ~ /^(his|her|its|eir|zir|hir|their) /
-	if (pronouns)
-		sub(/^[^ ]+ /, "", BATTLE_WEAPON)
-	else
+	pronouns = sub(/^(his|her|its|eir|zir|hir|their) /, "", BATTLE_WEAPON)
+	if (!pronouns)
 		sub(/^an? /, "", BATTLE_WEAPON)
 
 	if (BATTLE_WEAPON && BATTLE_WEAPON !~ /^the / && BATTLE_WEAPON !~ /'s/) {
