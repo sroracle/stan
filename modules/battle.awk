@@ -136,12 +136,10 @@ function battle_do_heal(        response, with_tool, maim_self, fatal_self) {
 	BATTLE_BACKFIRED = 0
 	if (BATTLE_MISSED) {
 		BATTLE_BACKFIRED = util_randrange(1, 100) > 70
-		if (BATTLE_BACKFIRED) {
+		if (BATTLE_BACKFIRED)
 			battle_damage(BATTLE_ATTACKER, BATTLE_DAMAGE)
-		}
-	} else {
+	} else
 		battle_damage(BATTLE_TARGET, -BATTLE_DAMAGE)
-	}
 
 	if (BATTLE_WEAPON) {
 		with_tool = " with "BATTLE_WEAPON
@@ -235,13 +233,13 @@ function battle(        i, response, old_target, with_tool, maim_self, fatal_sel
 	battle_sanitize_weapon()
 
 	response = ""
-	if (BATTLE_ACTION ~ /^(attacks|stabs|fites)$/) {
+	if (BATTLE_ACTION ~ /^(attacks|stabs|fites)$/)
 		response = battle_do_attack()
-	} else if (BATTLE_ACTION ~ /^(throws|drops|thwacks)$/) {
+	else if (BATTLE_ACTION ~ /^(throws|drops|thwacks)$/)
 		response = battle_do_throw()
-	} else if (BATTLE_ACTION == "casts") {
+	else if (BATTLE_ACTION == "casts")
 		response = battle_do_cast()
-	} else if (BATTLE_ACTION == "heals")
+	else if (BATTLE_ACTION == "heals")
 		response = battle_do_heal()
 
 	if (response) {
