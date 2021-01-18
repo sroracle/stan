@@ -58,7 +58,7 @@ function battle_do_attack(        i) {
 		return BATTLE_TARGET" is tremendously damaged by "BATTLE_WEAPON", taking "BATTLE_DAMAGE" damage!"
 	if (BATTLE_DAMAGE < 200)
 		return BATTLE_TARGET" barely even felt "BATTLE_WEAPON", taking "BATTLE_DAMAGE" damage."
-	return BATTLE_TARGET" takes "BATTLE_DAMAGE" from "BATTLE_WEAPON"."
+	return BATTLE_TARGET" takes "BATTLE_DAMAGE" damage from "BATTLE_WEAPON"."
 }
 
 function battle_match_plural(thing) {
