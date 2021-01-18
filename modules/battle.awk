@@ -16,9 +16,9 @@ function battle_damage(target, damage) {
 		BATTLE[target] -= damage
 }
 
-function battle_do_action(can_miss,        critical) {
+function battle_do_action(can_miss) {
 	BATTLE_CRITICAL = util_randrange(1, 100) > 90
-	if (critical)
+	if (BATTLE_CRITICAL)
 		BATTLE_DAMAGE = util_randrange(3000, 10000)
 	else
 		BATTLE_DAMAGE = util_randrange(1, 3000)
@@ -71,7 +71,7 @@ function battle_match_plural(thing) {
 	return "s"
 }
 
-function battle_do_throw(        maybe_person, to_both, response, s) {
+function battle_do_throw(        old_target, maybe_person, to_both, response, s) {
 	battle_do_action(1)
 	if (BATTLE_MISSED) {
 		old_target = BATTLE_TARGET
