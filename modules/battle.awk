@@ -71,7 +71,7 @@ function battle_match_plural(thing) {
 	return "s"
 }
 
-function battle_do_throw(        old_target, maybe_person, to_both, response, s) {
+function battle_do_throw(        old_target, maybe_person, to_both, orig_hp, response, s) {
 	battle_do_action(1)
 	if (BATTLE_MISSED) {
 		old_target = BATTLE_TARGET
@@ -89,6 +89,7 @@ function battle_do_throw(        old_target, maybe_person, to_both, response, s)
 	sub(/^the /, "", maybe_person)
 	if ((irc_channel, maybe_person) in IRC_NAMES) {
 		to_both = " to both"
+		orig_hp = BATTLE[BATTLE_TARGET]
 		battle_damage(maybe_person, BATTLE_DAMAGE)
 	}
 	else
@@ -104,7 +105,7 @@ function battle_do_throw(        old_target, maybe_person, to_both, response, s)
 		response = BATTLE_WEAPON" thwack"s" "BATTLE_TARGET" in the face, dealing "BATTLE_DAMAGE" HP"to_both"."
 
 	if (maybe_person) {
-		irc_say(response" "BATTLE_TARGET" now has "BATTLE[BATTLE_TARGET]" HP, and "maybe_person" now has "BATTLE[maybe_person]" HP.")
+		irc_say(response" "BATTLE_TARGET" now has "orig_hp" HP, and "maybe_person" now has "BATTLE[maybe_person]" HP.")
 		return
 	}
 	return response
