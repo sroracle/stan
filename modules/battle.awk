@@ -42,7 +42,7 @@ function battle_do_attack(        i) {
 		else if (i == 2)
 			irc_say(BATTLE_TARGET" is immune to "BATTLE_WEAPON)
 		else
-			irc_say("\001ACTION calls the police\001")
+			irc_act("calls the police")
 		return
 	}
 	if (BATTLE[BATTLE_TARGET] == 0) {

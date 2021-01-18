@@ -162,6 +162,10 @@ function irc_say(msg) {
 	irc_tell(irc_channel, msg)
 }
 
+function irc_act(msg) {
+	irc_say("\001ACTION "msg"\001")
+}
+
 function irc_set_nick(nick,        nick_pattern) {
 	IRC_NICK = nick
 	irc_do("NICK "IRC_NICK)
