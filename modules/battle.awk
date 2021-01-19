@@ -264,7 +264,7 @@ BEGIN {
 	BATTLE_WORDS["fites"] = 1
 	BATTLE_WORDS["fites", "with"] = 2
 
-	BATTLE_WORDS["throws"] = 1
+	BATTLE_WORDS["throws"] = 0
 	BATTLE_WORDS["throws", "at"] = 3
 
 	BATTLE_WORDS["drops"] = 1
