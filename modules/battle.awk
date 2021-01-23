@@ -218,7 +218,7 @@ function battle_sanitize_weapon(        pronouns) {
 	if (!BATTLE_WEAPON) {
 		if (BATTLE_ACTION == "fites")
 			BATTLE_WEAPON = "the 1v1 fite irl"
-		else if (BATTLE_ACTION ~ "^(attacks|stabs)$")
+		else if (BATTLE_ACTION ~ "^(attacks|shanks|stabs)$")
 			BATTLE_WEAPON = "the knife"
 		else if (BATTLE_ACTION ~ "^(throws|drops|thwacks)$")
 			BATTLE_WEAPON = BATTLE_ATTACKER
@@ -235,7 +235,7 @@ function battle(        i, response, old_target, with_tool, maim_self, fatal_sel
 	battle_sanitize_weapon()
 
 	response = ""
-	if (BATTLE_ACTION ~ /^(attacks|stabs|fites)$/)
+	if (BATTLE_ACTION ~ /^(attacks|shanks|stabs|fites)$/)
 		response = battle_do_attack()
 	else if (BATTLE_ACTION ~ /^(throws|drops|thwacks)$/)
 		response = battle_do_throw()
