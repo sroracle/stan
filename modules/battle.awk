@@ -258,6 +258,9 @@ BEGIN {
 	BATTLE_WORDS["attacks"] = 1
 	BATTLE_WORDS["attacks", "with"] = 2
 
+	BATTLE_WORDS["shanks"] = 1
+	BATTLE_WORDS["shanks", "with"] = 2
+
 	BATTLE_WORDS["stabs"] = 1
 	BATTLE_WORDS["stabs", "with"] = 2
 
