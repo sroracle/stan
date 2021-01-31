@@ -38,7 +38,7 @@ export LC_ALL="C"
 export CADIR=/etc/ssl/certs
 awk="$(readlink -f "$(command -v awk)")"
 case "$awk" in
-*mawk*) interactive="-W interactive";;
+*mawk*) export WHINY_USERS=1; interactive="-W interactive";;
 esac
 stan_argv="$awk $interactive -f stan.awk"
 
