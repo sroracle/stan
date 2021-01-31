@@ -225,6 +225,10 @@ function uno(msg,        card, discard_v, play) {
 		chat(UNO_CHAN, irc_msg)
 }
 
+BEGIN {
+	HELP["uno"] = CMD_PREFIX"uno [#CHANNEL]: join an UNO game"
+}
+
 irc_cmd == "uno" {
 	if (irc_msgv[2])
 		UNO_CHAN = irc_msgv[2]

@@ -2,6 +2,10 @@
 # Copyright (c) 2019-2021 Max Rees
 # See LICENSE for more information.
 
+BEGIN {
+	HELP["cocain"] = CMD_PREFIX"cocain [NICK]: make fun of someone in the channel"
+}
+
 irc_cmd == "cocain" {
 	if (irc_msgv[2])
 		_cocain_target = irc_msgv[2]

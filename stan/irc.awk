@@ -201,6 +201,10 @@ function irc_sync() {
 	irc_do("WHOIS "IRC_NICK)
 }
 
+BEGIN {
+	HELP["more"] = CMD_PREFIX"more: show the rest of the previous message"
+}
+
 {
 	irc_admin = 0
 	irc_ignore = 0

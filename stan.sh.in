@@ -29,6 +29,7 @@ cat \
 	modules/status.awk \
 	modules/uno.awk \
 	modules/uptime.awk \
+	modules/help.awk \
 	modules/battle.awk \
 	modules/chat.awk \
 >> stan.awk

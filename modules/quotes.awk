@@ -36,6 +36,12 @@ function quotes_rand(search,        argv, quote) {
 		irc_say(quote)
 }
 
+BEGIN {
+	HELP["add"] = CMD_PREFIX"add [QUOTE_TEXT]: add a quote to the quote database"
+	HELP["grab"] = CMD_PREFIX"grab [NICK]: add the last line from the NICK or the channel to the quote database"
+	HELP["rand"] = CMD_PREFIX"rand [SEARCH_TERMS]: get a random quote or search for one"
+}
+
 irc_msg_public && irc_cmd == "add" && !irc_ignore {
 	quotes_grab("", "", util_array_slice(irc_msgv, 2, irc_msgv_len))
 	next

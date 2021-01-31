@@ -147,6 +147,14 @@ function poll_end(poll, end,       bangpath, path, msg, file, url) {
 	}
 }
 
+BEGIN {
+	HELP["poll"] = CMD_PREFIX"poll: list active channel polls"
+	HELP["poll start"] = CMD_PREFIX"poll start POLL_NAME [CHOICE 1, CHOICE 2, ...]: start a channel poll, optionally with a fixed response list"
+	HELP["poll status"] = CMD_PREFIX"poll status POLL_NAME: show tallies for a given channel poll"
+	HELP["poll end"] = CMD_PREFIX"poll end POLL_NAME: end a channel poll and announce results"
+	HELP["vote"] = CMD_PREFIX"vote POLL_NAME CHOICE: vote in a channel poll"
+}
+
 irc_admin && irc_cmd == "poll" {
 	if (irc_msgv[2] == "listall") {
 		poll_list(1)

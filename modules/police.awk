@@ -16,4 +16,5 @@ irc_cmd == "police" {
 
 BEGIN {
 	POLICE = "OFF"
+	HELP["police"] = CMD_PREFIX"police [LEVEL]: display or change the police level"
 }
